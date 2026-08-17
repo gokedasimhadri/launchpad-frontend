@@ -1,9 +1,9 @@
 .app-container {
   width: 100%;
   min-height: 100vh;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   margin: 0 auto;
 }

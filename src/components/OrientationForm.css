@@ -6,7 +6,7 @@
 }
 
 .form-wrapper .glass-card {
-  padding: 2.5rem;
+  padding: 1.5rem 2.5rem;
   width: 100%;
   max-width: 600px;
   animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -25,7 +25,7 @@
 
 .form-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-header h2 {
@@ -45,7 +45,7 @@
 .orientation-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .form-group {
@@ -57,7 +57,7 @@
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 label {
@@ -72,9 +72,9 @@ input {
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: 12px;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   color: var(--text-main);
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
   transition: all 0.3s ease;
 }
@@ -95,7 +95,7 @@ input:focus {
 
 .highlight-group {
   background: rgba(79, 70, 229, 0.1);
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: 16px;
   border: 1px solid rgba(79, 70, 229, 0.2);
 }
@@ -109,15 +109,15 @@ input:focus {
 .auto-populate-section {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1rem 0;
+  gap: 1rem;
+  padding: 0.5rem 0;
 }
 
 .section-indicator {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
 }
 
 .section-indicator .line {
@@ -134,9 +134,9 @@ input:focus {
 }
 
 .question-group {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   background: rgba(0, 0, 0, 0.2);
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 16px;
   border-left: 4px solid #c084fc;
 }
@@ -164,12 +164,12 @@ input:focus {
 }
 
 .submit-btn {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.85rem;
   font-size: 1rem;
   font-weight: 600;
   display: flex;

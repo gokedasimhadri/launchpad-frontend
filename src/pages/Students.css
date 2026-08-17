@@ -14,11 +14,11 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: var(--text-main);
+  color: #0f172a;
 }
 
 .students-header p {
-  color: var(--text-muted);
+  color: #64748b;
 }
 
 .download-btn {
@@ -55,6 +55,9 @@
   margin-bottom: 1.5rem;
   border-radius: 16px;
   align-items: center;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .search-box {
@@ -68,13 +71,27 @@
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted);
+  color: #64748b;
 }
 
 .search-box input {
   width: 100%;
   padding-left: 2.75rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  border-radius: 12px;
+}
+
+.search-box input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.search-box input:focus {
+  border-color: #6366f1;
+  outline: none;
+  background: #ffffff;
 }
 
 .filter-box {
@@ -87,17 +104,17 @@
 .filter-icon {
   position: absolute;
   left: 1rem;
-  color: var(--text-muted);
+  color: #64748b;
   pointer-events: none;
 }
 
 .filter-box select {
   width: 100%;
   padding: 0.875rem 1rem 0.875rem 2.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--input-border);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  color: var(--text-main);
+  color: #1e293b;
   font-size: 0.95rem;
   outline: none;
   appearance: none;
@@ -107,19 +124,22 @@
 }
 
 .filter-box select:focus {
-  border-color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: #6366f1;
+  background: #ffffff;
 }
 
 .filter-box select option {
-  background: var(--bg-gradient-end);
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .table-container {
   overflow-x: auto;
   border-radius: 16px;
   padding: 0;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .students-table {
@@ -131,18 +151,18 @@
 .students-table th {
   padding: 1.25rem 1.5rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #64748b;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
 .students-table td {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  color: var(--text-main);
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
   font-size: 0.95rem;
 }
 
@@ -151,12 +171,12 @@
 }
 
 .students-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: #f8fafc;
 }
 
 .fw-600 {
   font-weight: 600;
-  color: #c084fc !important;
+  color: #4f46e5 !important;
 }
 
 .branch-badge {
@@ -181,12 +201,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
 .pagination-info {
-  color: var(--text-muted);
+  color: #64748b;
   font-size: 0.9rem;
 }
 
@@ -196,9 +216,9 @@
 }
 
 .page-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--input-border);
-  color: var(--text-main);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 500;
@@ -207,9 +227,9 @@
 }
 
 .page-btn:hover:not(:disabled) {
-  background: rgba(79, 70, 229, 0.2);
-  border-color: rgba(79, 70, 229, 0.5);
-  color: #818cf8;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #4f46e5;
 }
 
 .page-btn:disabled {
