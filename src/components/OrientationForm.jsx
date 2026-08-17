@@ -13,6 +13,7 @@ const OrientationForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [duplicateError, setDuplicateError] = useState('');
   const [notification, setNotification] = useState(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -137,11 +138,25 @@ const OrientationForm = () => {
           </div>
         </div>
       )}
-      <div className="glass-card">
-        <div className="form-header">
-          <h2>Orientation Details</h2>
-          <p>Please fill out the information below.</p>
+      {showWelcomeModal ? (
+        <div className="welcome-modal glass-card">
+          <div className="welcome-modal-content">
+            <h3>Welcome to Launchpad</h3>
+            <p>We are glad to have you here.</p>
+            <button 
+              className="welcome-ok-btn"
+              onClick={() => setShowWelcomeModal(false)}
+            >
+              OK
+            </button>
+          </div>
         </div>
+      ) : (
+        <div className="glass-card">
+          <div className="form-header">
+            <h2>Orientation Details</h2>
+            <p>Please fill out the information below.</p>
+          </div>
         
         <form onSubmit={handleSubmit} className="orientation-form">
           {/* R.No Field */}
@@ -264,6 +279,7 @@ const OrientationForm = () => {
           </button>
         </form>
       </div>
+      )}
     </div>
   );
 };

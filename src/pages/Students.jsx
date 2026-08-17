@@ -58,12 +58,13 @@ const Students = () => {
   const handleDownload = () => {
     if (filteredStudents.length === 0) return;
 
-    const headers = ["R.No", "Name", "Location", "Branch", "Phone", "Attendance", "Date Submitted"];
+    const headers = ["S.No", "R.No", "Name", "Location", "Branch", "Phone", "Attendance", "Date Submitted"];
     const csvRows = [];
     csvRows.push(headers.join(','));
 
-    filteredStudents.forEach(student => {
+    filteredStudents.forEach((student, index) => {
       const row = [
+        index + 1,
         student.rNo,
         `"${student.name}"`, // Quote strings to handle commas in names/locations
         `"${student.location}"`,
