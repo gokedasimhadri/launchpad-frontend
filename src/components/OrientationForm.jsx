@@ -30,7 +30,7 @@ const OrientationForm = () => {
         try {
           const ourBackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
           const rNoUpper = formData.rNo.toUpperCase();
-          
+
           // First, check if already submitted in our backend
           const checkResponse = await fetch(`${ourBackendUrl}/api/orientation/check/${rNoUpper}`);
           if (checkResponse.ok) {
@@ -90,7 +90,7 @@ const OrientationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await fetch(`${backendUrl}/api/orientation`, {
@@ -141,144 +141,144 @@ const OrientationForm = () => {
       {showWelcomeModal ? (
         <div className="welcome-modal glass-card">
           <div className="welcome-modal-content">
-            <h3>Welcome to Launchpad</h3>
+            <h3>Welcome to Aditya University</h3>
             <p>We are glad to have you here.</p>
-            <button 
+            <button
               className="welcome-ok-btn"
               onClick={() => setShowWelcomeModal(false)}
             >
-              OK
+              Enroll
             </button>
           </div>
         </div>
       ) : (
         <div className="glass-card">
           <div className="form-header">
-            <h2>Orientation Details</h2>
-            <p>Please fill out the information below.</p>
+            <h2>Orientation Enrollment</h2>
+            <p>Please enter your roll number below to enroll in the orientation program.</p>
           </div>
-        
-        <form onSubmit={handleSubmit} className="orientation-form">
-          {/* R.No Field */}
-          <div className="form-group highlight-group">
-            <label htmlFor="rNo">R.No</label>
-            <div style={{ position: 'relative' }}>
+
+          <form onSubmit={handleSubmit} className="orientation-form">
+            {/* R.No Field */}
+            <div className="form-group highlight-group">
+              <label htmlFor="rNo">Roll No</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  id="rNo"
+                  name="rNo"
+                  placeholder="xxxxxxxxxx"
+                  value={formData.rNo}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    borderColor: duplicateError ? '#ef4444' : ''
+                  }}
+                />
+                {isLoading && <span className="loading-spinner"></span>}
+              </div>
+              {duplicateError ? (
+                <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>{duplicateError}</span>
+              ) : (
+                <span className="helper-text">Enter 10-digit registration/roll number to auto-populate</span>
+              )}
+            </div>
+
+            <div className="auto-populate-section">
+              <div className="section-indicator">
+                <span className="line"></span>
+                <span className="text">Member Info</span>
+                <span className="line"></span>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="name">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="location">Location</label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="branch">Branch</label>
+                  <input
+                    type="text"
+                    id="branch"
+                    name="branch"
+                    value={formData.branch}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="phone">Phone</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-group question-group">
+              <label htmlFor="attendanceCount" className="question-label">
+                Question: <br />
+                <span>How many Members accompanied you for today orientation?</span>
+              </label>
               <input
-                type="text"
-                id="rNo"
-                name="rNo"
-                placeholder="xxxx"
-                value={formData.rNo}
+                type="number"
+                id="attendanceCount"
+                name="attendanceCount"
+                min="0"
+                placeholder="e.g., 14"
+                value={formData.attendanceCount}
                 onChange={handleChange}
                 required
-                style={{ 
-                  width: '100%',
-                  borderColor: duplicateError ? '#ef4444' : ''
-                }}
               />
-              {isLoading && <span className="loading-spinner"></span>}
-            </div>
-            {duplicateError ? (
-              <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>{duplicateError}</span>
-            ) : (
-              <span className="helper-text">Enter 10-digit registration/roll number to auto-populate</span>
-            )}
-          </div>
-
-          <div className="auto-populate-section">
-            <div className="section-indicator">
-              <span className="line"></span>
-              <span className="text">Member Info</span>
-              <span className="line"></span>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="name">Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="location">Location</label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="branch">Branch</label>
-                <input
-                  type="text"
-                  id="branch"
-                  name="branch"
-                  value={formData.branch}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="phone">Phone</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-group question-group">
-            <label htmlFor="attendanceCount" className="question-label">
-              Question: <br />
-              <span>How many Members have attended today orientation?</span>
-            </label>
-            <input
-              type="number"
-              id="attendanceCount"
-              name="attendanceCount"
-              min="0"
-              placeholder="e.g., 14"
-              value={formData.attendanceCount}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="submit-btn"
-            disabled={isLoading || !!duplicateError}
-            style={{ 
-              opacity: (isLoading || !!duplicateError) ? 0.6 : 1, 
-              cursor: (isLoading || !!duplicateError) ? 'not-allowed' : 'pointer'
-            }}
-          >
-            Submit Details
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </button>
-        </form>
-      </div>
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={isLoading || !!duplicateError}
+              style={{
+                opacity: (isLoading || !!duplicateError) ? 0.6 : 1,
+                cursor: (isLoading || !!duplicateError) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Submit Details
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </form>
+        </div>
       )}
     </div>
   );
