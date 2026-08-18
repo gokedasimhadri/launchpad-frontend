@@ -16,7 +16,7 @@ const Students = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
         const response = await fetch(`${backendUrl}/api/orientation`);
         if (response.ok) {
           const data = await response.json();

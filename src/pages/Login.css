@@ -1,32 +1,64 @@
 .login-container {
+  position: relative;
   width: 100%;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem;
+  background: var(--bg-page);
+}
+
+.login-theme-toggle-wrapper {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 20;
 }
 
 .login-card {
+  position: relative;
   width: 100%;
   max-width: 420px;
-  padding: 3rem 2.5rem;
+  padding: 0.25rem 2rem 2rem 2rem;
+  background: var(--bg-card);
+  border: none;
+  border-radius: 24px;
+  box-shadow: none;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .login-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .icon-wrapper {
-  background: rgba(79, 70, 229, 0.15);
-  border: 1px solid rgba(79, 70, 229, 0.3);
-  padding: 1rem;
+  background: transparent;
+  border: none;
+  padding: 0;
   border-radius: 50%;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 0 20px rgba(79, 70, 229, 0.2);
+  margin-top: -0.5rem;
+  margin-bottom: 0.25rem;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-circle-logo {
+  width: 105px;
+  height: 105px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+  transition: filter 0.4s ease, transform 0.4s ease;
+}
+
+.login-circle-logo:hover {
+  filter: drop-shadow(0 0 20px rgba(241, 104, 59, 0.45));
+  transform: scale(1.05);
 }
 
 .login-header h2 {
@@ -47,6 +79,14 @@
   gap: 1.5rem;
 }
 
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
 .input-with-icon {
   position: relative;
   display: flex;
@@ -58,17 +98,63 @@
   left: 1rem;
   color: var(--text-muted);
   pointer-events: none;
+  z-index: 1;
 }
 
 .input-with-icon input {
   padding-left: 2.75rem;
   width: 100%;
+  height: 48px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .input-with-icon input {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.input-with-icon input:-webkit-autofill,
+.input-with-icon input:-webkit-autofill:hover, 
+.input-with-icon input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-main);
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+[data-theme="dark"] .input-with-icon input:-webkit-autofill,
+[data-theme="dark"] .input-with-icon input:-webkit-autofill:hover, 
+[data-theme="dark"] .input-with-icon input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
+}
+
+.input-with-icon input:focus {
+  outline: none;
+  background: var(--bg-card);
+  border-color: #d06c38;
+  box-shadow: 0 0 0 4px rgba(208, 108, 56, 0.15);
+}
+
+[data-theme="dark"] .input-with-icon input:focus {
+  background: #1e293b;
+  border-color: #d06c38;
+  box-shadow: 0 0 0 4px rgba(208, 108, 56, 0.2);
+}
+
+.input-with-icon input::placeholder {
+  color: var(--text-muted);
 }
 
 .login-error {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
   border-left: 4px solid #ef4444;
-  color: #ef4444;
+  color: #dc2626;
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -80,11 +166,41 @@
 
 .login-btn {
   margin-top: 1rem;
-  height: 52px;
+  height: 50px;
+  background: var(--hero-banner-bg);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(13, 35, 59, 0.25);
+}
+
+.login-btn:hover:not(:disabled) {
+  background: var(--hero-banner-bg);
+  opacity: 1;
+  transform: none;
+  box-shadow: 0 4px 14px rgba(13, 35, 59, 0.25);
 }
 
 .static-spinner {
   position: static;
   transform: none;
   border-top-color: white;
+}
+
+@media (max-width: 640px) {
+  .login-theme-toggle-wrapper {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    z-index: 20;
+  }
+
+  .login-card {
+    padding: 1rem 1.25rem 1.5rem 1.25rem;
+    border-radius: 20px;
+  }
 }

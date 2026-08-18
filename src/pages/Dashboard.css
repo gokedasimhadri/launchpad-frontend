@@ -15,12 +15,12 @@
 .dashboard-header-row h1 {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   margin-bottom: 0.25rem;
 }
 
 .dashboard-header-row p {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -28,11 +28,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  color: #1e293b;
+  color: var(--text-main);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -41,12 +41,12 @@
 }
 
 .date-filter:hover {
-  background: #f8fafc;
+  background: var(--bg-input);
 }
 
 /* Hero Banner */
 .hero-banner {
-  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  background: var(--hero-banner-bg);
   border-radius: 20px;
   padding: 1.5rem 2.5rem;
   display: flex;
@@ -55,8 +55,9 @@
   margin-bottom: 1.5rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   border: none;
+  transition: background 0.3s ease;
 }
 
 /* Subtle background pattern for hero */
@@ -137,7 +138,7 @@
 .dashboard-section h2 {
   font-size: 1.1rem;
   margin-bottom: 1rem;
-  color: #0f172a;
+  color: var(--text-main);
   font-weight: 600;
 }
 
@@ -152,9 +153,10 @@
   display: flex;
   flex-direction: column;
   border-radius: 20px;
-  background: #ffffff;
-  border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .branch-card-header {
@@ -177,21 +179,21 @@
 .branch-card-title h4 {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-main);
   margin-bottom: 0.25rem;
 }
 
 .branch-count {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   line-height: 1;
   margin-bottom: 0.1rem;
 }
 
 .branch-card-title span {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .progress-container {
@@ -203,7 +205,7 @@
 .progress-bar-bg {
   flex: 1;
   height: 4px;
-  background: #f1f5f9;
+  background: var(--bg-input);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -230,10 +232,11 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 20px;
-  border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .chart-header {
@@ -259,16 +262,34 @@
 .chart-header h3 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
 .chart-filter {
-  background: #ffffff;
-  padding: 0.4rem 0.75rem;
-  border-radius: 6px;
+  background: var(--bg-input);
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
   font-size: 0.8rem;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+}
+
+.chart-filter-select {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.chart-filter-select option {
+  background: var(--bg-card);
+  color: var(--text-main);
 }
 
 .chart-body {
@@ -306,14 +327,14 @@
 .donut-center-text h2 {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   line-height: 1;
   margin-bottom: 0.2rem;
 }
 
 .donut-center-text p {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .custom-legend {
@@ -337,20 +358,20 @@
 }
 
 .legend-name {
-  color: #1e293b;
+  color: var(--text-main);
   font-weight: 500;
   width: 50px;
 }
 
 .legend-count {
-  color: #64748b;
+  color: var(--text-muted);
   flex: 1;
   text-align: right;
   margin-right: 1rem;
 }
 
 .legend-percentage {
-  color: #0f172a;
+  color: var(--text-main);
   font-weight: 700;
 }
 
