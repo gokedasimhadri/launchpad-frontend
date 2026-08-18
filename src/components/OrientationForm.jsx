@@ -33,7 +33,7 @@ const OrientationForm = () => {
         setIsLoading(true);
         setDuplicateError('');
         try {
-          const ourBackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
+          const ourBackendUrl = import.meta.env.VITE_API_URL;
           const rNoUpper = formData.rNo.toUpperCase();
 
           // First, check if already submitted in our backend
@@ -48,20 +48,21 @@ const OrientationForm = () => {
           }
 
           // Fetch from student API
-          const studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || '/adityaapi/api/studentdata';
-          const response = await fetch(`${studentApiUrl}?rNo=${rNoUpper}`);
+          const studentApiUrl = import.meta.env.VITE_STUDENT_API_URL;
+          const response = await fetch(`${studentApiUrl}/${rNoUpper}`);
 
           if (response.ok) {
             const data = await response.json();
             if (data && data.length > 0) {
               const student = data[0];
+              console.log('Student Data:', student);
               setFormData(prev => ({
                 ...prev,
                 rNo: rNoUpper,
-                name: student.name || prev.name,
-                location: student.campus || prev.location,
-                branch: student.program || prev.branch,
-                phone: student.mobile || prev.phone
+                name: student.studentname || student.name || prev.name,
+                location: student.campus || student.district || prev.location,
+                branch: student.branch || student.program || prev.branch,
+                phone: student.mobilenumber || student.mobile || prev.phone
               }));
             }
           }
@@ -235,7 +236,7 @@ const OrientationForm = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="location">Location</label>
+                  <label htmlFor="location">Address</label>
                   <div className="input-with-icon">
                     <div className="field-icon-wrapper">
                       <MapPin size={20} />
