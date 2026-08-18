@@ -182,21 +182,24 @@ const OrientationForm = () => {
                 <div className="field-icon-wrapper">
                   <IdCard size={20} />
                 </div>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <input
-                    type="text"
-                    id="rNo"
-                    name="rNo"
-                    placeholder="Enter your 10-digit roll number"
-                    value={formData.rNo}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: '100%',
-                      borderColor: duplicateError ? '#ef4444' : ''
-                    }}
-                  />
-                  {isLoading && <span className="loading-spinner"></span>}
+                <div className="input-content">
+                  <label htmlFor="rNo">Roll No</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      id="rNo"
+                      name="rNo"
+                      placeholder="Enter your roll number"
+                      value={formData.rNo}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        width: '100%',
+                        borderColor: duplicateError ? '#ef4444' : ''
+                      }}
+                    />
+                    {isLoading && <span className="loading-spinner"></span>}
+                  </div>
                 </div>
               </div>
               {duplicateError ? (

@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, QrCode, LogOut, Menu, Headphones, ChevronRight } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
-import ThemeToggle from './ThemeToggle';
+import { LayoutDashboard, Users, LogOut, Menu, Bell, Headphones, ChevronRight, QrCode } from 'lucide-react';
 import './DashboardLayout.css';
 
 const DashboardLayout = () => {
