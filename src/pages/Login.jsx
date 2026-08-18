@@ -53,7 +53,7 @@ const Login = () => {
           <div className="icon-wrapper">
             <CelestialLogo theme={theme} />
           </div>
-          <h2>Welcome Back</h2>
+          <h2>Welcome</h2>
           <p>Sign in to access the dashboard</p>
         </div>
 
@@ -92,8 +92,8 @@ const Login = () => {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-btn login-btn"
             disabled={isLoading}
           >
