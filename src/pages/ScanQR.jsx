@@ -35,7 +35,7 @@ const ScanQR = () => {
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
-  const qrUrl = "http://localhost:6001/orientation";
+  const qrUrl = import.meta.env.VITE_ORIENTATION_URL || "http://localhost:6001/orientation";
 
   return (
     <div className="scan-qr-container">
