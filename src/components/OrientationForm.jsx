@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GraduationCap, IdCard, User, MapPin, Building, Phone, HelpCircle, ArrowRight } from 'lucide-react';
 import './OrientationForm.css';
 
 const OrientationForm = () => {
@@ -152,7 +153,12 @@ const OrientationForm = () => {
           </div>
         </div>
       ) : (
-        <div className="glass-card">
+        <div className="glass-card form-container">
+          <div className="form-icon-header">
+            <div className="icon-circle">
+              <GraduationCap size={28} />
+            </div>
+          </div>
           <div className="form-header">
             <h2>Orientation Enrollment</h2>
             <p>Please enter your roll number below to enroll in the orientation program.</p>
@@ -161,22 +167,29 @@ const OrientationForm = () => {
           <form onSubmit={handleSubmit} className="orientation-form">
             {/* R.No Field */}
             <div className="form-group highlight-group">
-              <label htmlFor="rNo">Roll No</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  id="rNo"
-                  name="rNo"
-                  placeholder="xxxxxxxxxx"
-                  value={formData.rNo}
-                  onChange={handleChange}
-                  required
-                  style={{
-                    width: '100%',
-                    borderColor: duplicateError ? '#ef4444' : ''
-                  }}
-                />
-                {isLoading && <span className="loading-spinner"></span>}
+              <div className="input-with-icon">
+                <div className="field-icon-wrapper">
+                  <IdCard size={20} />
+                </div>
+                <div className="input-content">
+                  <label htmlFor="rNo">Roll No</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      id="rNo"
+                      name="rNo"
+                      placeholder="Enter your 10-digit roll number"
+                      value={formData.rNo}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        width: '100%',
+                        borderColor: duplicateError ? '#ef4444' : ''
+                      }}
+                    />
+                    {isLoading && <span className="loading-spinner"></span>}
+                  </div>
+                </div>
               </div>
               {duplicateError ? (
                 <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>{duplicateError}</span>
@@ -188,78 +201,117 @@ const OrientationForm = () => {
             <div className="auto-populate-section">
               <div className="section-indicator">
                 <span className="line"></span>
-                <span className="text">Member Info</span>
+                <span className="text">Member Information</span>
                 <span className="line"></span>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="name">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
+                  <div className="input-with-icon">
+                    <div className="field-icon-wrapper">
+                      <User size={20} />
+                    </div>
+                    <div className="input-content">
+                      <label htmlFor="name">Name</label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Enter full name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="location">Location</label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    required
-                  />
+                  <div className="input-with-icon">
+                    <div className="field-icon-wrapper">
+                      <MapPin size={20} />
+                    </div>
+                    <div className="input-content">
+                      <label htmlFor="location">Location</label>
+                      <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        placeholder="Enter your location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="branch">Branch</label>
-                  <input
-                    type="text"
-                    id="branch"
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleChange}
-                    required
-                  />
+                  <div className="input-with-icon">
+                    <div className="field-icon-wrapper">
+                      <Building size={20} />
+                    </div>
+                    <div className="input-content">
+                      <label htmlFor="branch">Branch</label>
+                      <input
+                        type="text"
+                        id="branch"
+                        name="branch"
+                        placeholder="Enter your branch"
+                        value={formData.branch}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="phone">Phone</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                  />
+                  <div className="input-with-icon">
+                    <div className="field-icon-wrapper">
+                      <Phone size={20} />
+                    </div>
+                    <div className="input-content">
+                      <label htmlFor="phone">Phone</label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        placeholder="Enter your phone number"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="form-group question-group">
-              <label htmlFor="attendanceCount" className="question-label">
-                Question: <br />
-                <span>How many Members accompanied you for today orientation?</span>
-              </label>
-              <input
-                type="number"
-                id="attendanceCount"
-                name="attendanceCount"
-                min="0"
-                placeholder="e.g., 14"
-                value={formData.attendanceCount}
-                onChange={handleChange}
-                required
-              />
+              <div className="input-with-icon">
+                <div className="field-icon-wrapper question-icon">
+                  <HelpCircle size={20} color="white" />
+                </div>
+                <div className="input-content w-full">
+                  <label htmlFor="attendanceCount" className="question-label">
+                    Question
+                    <span>How many members accompanied you for today orientation?</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="attendanceCount"
+                    name="attendanceCount"
+                    min="1"
+                    placeholder="e.g., 14"
+                    value={formData.attendanceCount}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
             </div>
 
             <button
@@ -272,10 +324,7 @@ const OrientationForm = () => {
               }}
             >
               Submit Details
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
+              <ArrowRight size={20} />
             </button>
           </form>
         </div>

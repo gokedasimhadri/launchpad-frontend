@@ -54,9 +54,37 @@ const DashboardLayout = () => {
       <aside className={`sidebar glass-card ${sidebarOpen ? 'open' : ''}`}>
         <div className="logo-container">
           <svg className="aditya-logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,4" />
-            <circle cx="50" cy="50" r="33" fill="none" stroke="#fbbf24" strokeWidth="1.5" />
-            <polygon points="50,30 54.7,43.5 69,43.8 57.6,52.5 61.8,66.2 50,58 38.2,66.2 42.4,52.5 31,43.8 45.3,43.5" fill="#fbbf24" />
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#fbbf24" strokeWidth="0.5" />
+            <circle cx="25" cy="9" r="1.5" fill="#fbbf24" />
+            
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#fbbf24" strokeWidth="0.5" />
+            <circle cx="85" cy="35" r="1" fill="#fbbf24" />
+            <circle cx="15" cy="65" r="1" fill="#fbbf24" />
+            <circle cx="80" cy="70" r="1.5" fill="#fbbf24" />
+
+            <circle cx="50" cy="50" r="30" fill="none" stroke="#fbbf24" strokeWidth="1" />
+            
+            {/* Sun rays */}
+            <path d="M50 20 Q53 30 55 35 Q50 32 45 35 Q47 30 50 20" fill="#fbbf24"/>
+            <path d="M71 29 Q63 36 58 40 Q55 35 52 33 Q61 34 71 29" fill="#fbbf24"/>
+            <path d="M80 50 Q70 53 65 55 Q65 50 65 45 Q70 47 80 50" fill="#fbbf24"/>
+            <path d="M71 71 Q63 64 58 60 Q55 65 52 67 Q61 66 71 71" fill="#fbbf24"/>
+            <path d="M50 80 Q53 70 55 65 Q50 68 45 65 Q47 70 50 80" fill="#fbbf24"/>
+            <path d="M29 71 Q37 64 42 60 Q45 65 48 67 Q39 66 29 71" fill="#fbbf24"/>
+            <path d="M20 50 Q30 53 35 55 Q35 50 35 45 Q30 47 20 50" fill="#fbbf24"/>
+            <path d="M29 29 Q37 36 42 40 Q45 35 48 33 Q39 34 29 29" fill="#fbbf24"/>
+            
+            <circle cx="50" cy="50" r="12" fill="#fbbf24" />
+            
+            {/* The 'A' inside the sun */}
+            <path d="M50 42 L45 53 L47 53 L48.5 49 L51.5 49 L53 53 L55 53 Z M49 47.5 L50 44 L51 47.5 Z" fill="#0f172a" />
+            
+            {/* Bottom decorative stand */}
+            <path d="M35 85 Q50 90 65 85" fill="none" stroke="#fbbf24" strokeWidth="1.5" />
+            <circle cx="34" cy="84" r="1.5" fill="#fbbf24" />
+            <circle cx="66" cy="84" r="1.5" fill="#fbbf24" />
+            <path d="M42 85 L58 85" stroke="#fbbf24" strokeWidth="2" />
+            <circle cx="50" cy="81" r="2" fill="#fbbf24" />
           </svg>
           <div className="aditya-logo-text">
             <span className="aditya-text">ADITYA</span>

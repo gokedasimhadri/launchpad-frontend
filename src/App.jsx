@@ -20,11 +20,7 @@ function App() {
         </Route>
         
         {/* Public Orientation Form Route */}
-        <Route path="/orientation" element={
-          <div className="app-container">
-            <OrientationForm />
-          </div>
-        } />
+        <Route path="/orientation" element={<OrientationForm />} />
         
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
