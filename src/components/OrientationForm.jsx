@@ -183,7 +183,6 @@ const OrientationForm = () => {
                   <IdCard size={20} />
                 </div>
                 <div className="input-content">
-                  <label htmlFor="rNo">Roll No</label>
                   <div style={{ position: 'relative' }}>
                     <input
                       type="text"

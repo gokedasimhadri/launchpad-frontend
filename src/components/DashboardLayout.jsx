@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { LayoutDashboard, Users, LogOut, Menu, Bell, Headphones, ChevronRight, QrCode } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from './ThemeToggle';
 import './DashboardLayout.css';
 
 const DashboardLayout = () => {
@@ -25,7 +27,7 @@ const DashboardLayout = () => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Students', path: '/dashboard/students', icon: <Users size={20} /> },
-    { name: 'Scan QR', path: '/dashboard/scanqr', icon: <QrCode size={20} /> },
+    // { name: 'Scan QR', path: '/dashboard/scanqr', icon: <QrCode size={20} /> },
   ];
 
   return (

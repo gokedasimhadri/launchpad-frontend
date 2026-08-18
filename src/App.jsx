@@ -11,24 +11,26 @@ import './App.css';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        
-        {/* Protected Dashboard Route */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="students" element={<Students />} />
-          <Route path="scanqr" element={<ScanQR />} />
-        </Route>
-        
-        {/* Public Orientation Form Route */}
-        <Route path="/orientation" element={<OrientationForm />} />
-        
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          
+          {/* Protected Dashboard Route */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="students" element={<Students />} />
+            <Route path="scanqr" element={<ScanQR />} />
+          </Route>
+          
+          {/* Public Orientation Form Route */}
+          <Route path="/orientation" element={<OrientationForm />} />
+          
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
