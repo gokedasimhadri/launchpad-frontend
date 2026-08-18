@@ -50,7 +50,7 @@ const OrientationForm = () => {
           // Fetch from student API
           const studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || '/adityaapi/api/studentdata';
           const response = await fetch(`${studentApiUrl}?rNo=${rNoUpper}`);
-          
+
           if (response.ok) {
             const data = await response.json();
             if (data && data.length > 0) {
@@ -87,7 +87,7 @@ const OrientationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (duplicateError) {
       showNotification('This roll number is already submitted.', 'error');
       return;
@@ -202,7 +202,7 @@ const OrientationForm = () => {
               {duplicateError ? (
                 <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>{duplicateError}</span>
               ) : (
-                <span className="helper-text">Enter 10-digit registration/roll number to auto-populate</span>
+                <span className="helper-text">Enter roll number to auto-populate</span>
               )}
             </div>
 

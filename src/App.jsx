@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import DashboardLayout from './components/DashboardLayout';
+import ScanQR from './pages/ScanQR';
 import './App.css';
 
 function App() {
@@ -14,16 +15,16 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Login />} />
-          
+
           {/* Protected Dashboard Route */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="students" element={<Students />} />
           </Route>
-          
+
           {/* Public Orientation Form Route */}
           <Route path="/orientation" element={<OrientationForm />} />
-          
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

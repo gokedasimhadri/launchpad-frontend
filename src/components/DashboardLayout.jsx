@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Menu, Headphones, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, QrCode, LogOut, Menu, Headphones, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from './ThemeToggle';
 import './DashboardLayout.css';
@@ -27,6 +27,7 @@ const DashboardLayout = () => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Students', path: '/dashboard/students', icon: <Users size={20} /> },
+    { name: 'Scan QR', path: '/dashboard/scanqr', icon: <QrCode size={20} /> },
   ];
 
   return (
@@ -53,10 +54,10 @@ const DashboardLayout = () => {
       {/* Sidebar */}
       <aside className={`sidebar glass-card ${sidebarOpen ? 'open' : ''}`}>
         <div className="logo-container">
-          <img 
-            src={theme === 'light' ? '/ADITYA LOGO2.png' : '/Aditya University Gold Logo.png'} 
-            alt="Aditya University Logo" 
-            className="sidebar-logo-img" 
+          <img
+            src={theme === 'light' ? '/ADITYA LOGO2.png' : '/Aditya University Gold Logo.png'}
+            alt="Aditya University Logo"
+            className="sidebar-logo-img"
           />
         </div>
 
