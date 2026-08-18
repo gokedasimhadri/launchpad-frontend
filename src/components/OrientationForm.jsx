@@ -49,8 +49,14 @@ const OrientationForm = () => {
           }
 
           // Fetch from student API
-          const studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || '/adityaapi/api/studentdata';
-          const response = await fetch(`${studentApiUrl}?rNo=${rNoUpper}`);
+          let studentApiUrl = import.meta.env.VITE_STUDENT_API_URL;
+          
+          // Strip the domain so the local Vite proxy can intercept and avoid CORS
+          if (studentApiUrl && studentApiUrl.includes('https://info.aec.edu.in')) {
+            studentApiUrl = studentApiUrl.replace('https://info.aec.edu.in', '');
+          }
+          
+          const response = await fetch(`${studentApiUrl}/${rNoUpper}`);
 
           if (response.ok) {
             const data = await response.json();
@@ -59,10 +65,10 @@ const OrientationForm = () => {
               setFormData(prev => ({
                 ...prev,
                 rNo: rNoUpper,
-                name: student.name || prev.name,
-                location: student.campus || prev.location,
-                branch: student.program || prev.branch,
-                phone: student.mobile || prev.phone
+                name: student.studentname || student.name || prev.name,
+                location: student.campus || student.district || prev.location,
+                branch: student.branch || student.program || prev.branch,
+                phone: student.mobilenumber || student.mobile || prev.phone
               }));
             }
           }
@@ -80,7 +86,7 @@ const OrientationForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'rNo') {
-      setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
+      setFormData(prev => ({ ...prev, [name]: value.replace(/\s+/g, '').toUpperCase() }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
