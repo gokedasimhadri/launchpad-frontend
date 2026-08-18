@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, TrendingUp, Calendar, MoreHorizontal, Users } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useTheme } from '../context/ThemeContext';
 import './Dashboard.css';
 
 const MOCK_WEEKLY_DATA = [
@@ -13,6 +14,16 @@ const MOCK_WEEKLY_DATA = [
   { name: 'Sun', attendance: 14 }
 ];
 
+const MOCK_HOURLY_DATA = [
+  { name: '9 AM', attendance: 1 },
+  { name: '11 AM', attendance: 3 },
+  { name: '1 PM', attendance: 5 },
+  { name: '3 PM', attendance: 8 },
+  { name: '5 PM', attendance: 12 },
+  { name: '7 PM', attendance: 14 },
+  { name: '9 PM', attendance: 15 }
+];
+
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
 const BRANCH_ICONS = {
   'Ag.E': BookOpen,
@@ -22,14 +33,23 @@ const BRANCH_ICONS = {
 };
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({ totalStudents: 0, branchStats: [] });
+  const [stats, setStats] = useState({ totalStudents: 0, branchStats: [], weeklyData: [], hourlyData: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [chartFilter, setChartFilter] = useState('week');
+  const { theme } = useTheme();
+
+  const chartColor = theme === 'light' ? '#0b5299' : '#BE9337';
+  
+  const dbWeeklyData = (stats.weeklyData && stats.weeklyData.length > 0) ? stats.weeklyData : MOCK_WEEKLY_DATA;
+  const dbHourlyData = (stats.hourlyData && stats.hourlyData.length > 0) ? stats.hourlyData : MOCK_HOURLY_DATA;
+  
+  const activeChartData = chartFilter === 'day' ? dbHourlyData : dbWeeklyData;
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
         const response = await fetch(`${backendUrl}/api/statistics`);
         if (response.ok) {
           const data = await response.json();
@@ -80,29 +100,18 @@ const Dashboard = () => {
     <div className="dashboard-page">
       <div className="dashboard-header-row">
         <div>
-          <h1>Welcome back, Dean! 👋</h1>
+          <h1>Welcome back, Dean!</h1>
           <p>Here's what's happening with orientation attendance.</p>
-        </div>
-        <div className="date-filter">
-          <Calendar size={16} />
-          <span>This Week</span>
         </div>
       </div>
 
       {/* Hero Banner */}
       <div className="hero-banner">
         <div className="hero-content">
-          <div className="hero-icon-circle">
-            <Users size={32} />
-          </div>
           <div className="hero-text">
             <h3>Total Attended</h3>
             <h2>{stats.totalStudents}</h2>
-            <p className="trend-up"><TrendingUp size={16} /> 18% vs Last Week</p>
           </div>
-        </div>
-        <div className="hero-illustration">
-          <img src="/hero_image.jpg" alt="Graduation Cap" />
         </div>
       </div>
 
@@ -143,39 +152,51 @@ const Dashboard = () => {
         <div className="chart-card glass-card">
           <div className="chart-header">
             <div className="chart-title">
-              <div className="chart-title-icon">
-                <TrendingUp size={18} color="#a855f7" />
+              <div className="chart-title-icon" style={{ background: `${chartColor}18` }}>
+                <TrendingUp size={18} color={chartColor} />
               </div>
               <h3>Attendance Overview</h3>
             </div>
             <div className="chart-filter">
-              <span>This Week</span>
+              <select 
+                value={chartFilter} 
+                onChange={(e) => setChartFilter(e.target.value)}
+                className="chart-filter-select"
+              >
+                <option value="week">This Week</option>
+                <option value="day">This Day</option>
+              </select>
             </div>
           </div>
           <div className="chart-body">
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={MOCK_WEEKLY_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor={chartColor} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: theme === 'light' ? '#64748b' : '#94a3b8', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: theme === 'light' ? '#64748b' : '#94a3b8', fontSize: 12 }} />
                 <RechartsTooltip 
-                  contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                  itemStyle={{ color: '#1e293b' }}
+                  contentStyle={{ 
+                    background: theme === 'light' ? '#ffffff' : '#1e293b', 
+                    border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.1)', 
+                    borderRadius: '8px', 
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
+                  }}
+                  itemStyle={{ color: theme === 'light' ? '#1e293b' : '#f8fafc' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="attendance" 
-                  stroke="#8b5cf6" 
+                  stroke={chartColor} 
                   strokeWidth={3} 
                   fillOpacity={1} 
                   fill="url(#colorAttendance)"
-                  dot={{ r: 4, fill: '#ffffff', strokeWidth: 2, stroke: '#8b5cf6' }} 
+                  dot={{ r: 4, fill: theme === 'light' ? '#ffffff' : '#1e293b', strokeWidth: 2, stroke: chartColor }} 
                   activeDot={{ r: 6 }} 
                 />
               </AreaChart>

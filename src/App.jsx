@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import OrientationForm from './components/OrientationForm';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
