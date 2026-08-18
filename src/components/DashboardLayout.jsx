@@ -34,22 +34,19 @@ const DashboardLayout = () => {
     <div className="dashboard-layout">
       {/* Top Navbar */}
       <header className="top-navbar">
+        <button className="menu-btn mobile-only" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Menu size={24} />
+        </button>
         <div className="navbar-right">
           <ThemeToggle />
           <button onClick={handleLogout} className="top-logout-btn" title="Logout">
             <LogOut size={20} />
-            <span>Logout</span>
+            <span className="logout-text">Logout</span>
           </button>
         </div>
       </header>
 
-      {/* Mobile sidebar toggle */}
-      <div className="mobile-header">
-        <button className="menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <Menu size={24} />
-        </button>
-        <h2>Launchpad</h2>
-      </div>
+
 
       {/* Sidebar */}
       <aside className={`sidebar glass-card ${sidebarOpen ? 'open' : ''}`}>
