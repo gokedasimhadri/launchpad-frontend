@@ -178,7 +178,7 @@ const OrientationForm = () => {
                       type="text"
                       id="rNo"
                       name="rNo"
-                      placeholder="Enter your 10-digit roll number"
+                      placeholder="Enter your roll number"
                       value={formData.rNo}
                       onChange={handleChange}
                       required
@@ -194,7 +194,7 @@ const OrientationForm = () => {
               {duplicateError ? (
                 <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>{duplicateError}</span>
               ) : (
-                <span className="helper-text">Enter 10-digit registration/roll number to auto-populate</span>
+                <span className="helper-text">Enter roll number to auto-populate</span>
               )}
             </div>
 
