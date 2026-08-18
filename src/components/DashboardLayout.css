@@ -13,7 +13,7 @@
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 2rem;
   position: fixed;
   top: 0;
@@ -44,6 +44,7 @@
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  margin-left: auto;
 }
 
 .notification-bell {
@@ -100,14 +101,8 @@
   background: #fef2f2;
 }
 
-.mobile-header {
+.mobile-only {
   display: none;
-  width: 100%;
-  padding: 1rem;
-  background: var(--bg-navbar);
-  border-bottom: 1px solid var(--border-color);
-  align-items: center;
-  gap: 1rem;
 }
 
 .menu-btn {
@@ -115,14 +110,7 @@
   border: none;
   color: var(--text-main);
   padding: 0.5rem;
-}
-
-.mobile-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  background: linear-gradient(to right, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  cursor: pointer;
 }
 
 .sidebar {
@@ -295,7 +283,12 @@
     flex-direction: column;
   }
   
-  .mobile-header {
+  .top-navbar {
+    left: 0;
+    padding: 0 1rem;
+  }
+
+  .mobile-only {
     display: flex;
   }
   
@@ -310,6 +303,12 @@
   .main-content {
     margin-left: 0;
     padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .logout-text {
+    display: none;
   }
   
   .sidebar-overlay {
