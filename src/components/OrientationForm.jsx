@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { GraduationCap, IdCard, User, MapPin, Building, Phone, HelpCircle, ArrowRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -33,36 +34,35 @@ const OrientationForm = () => {
         setIsLoading(true);
         setDuplicateError('');
         try {
-          const ourBackendUrl = import.meta.env.VITE_API_URL;
+          const ourBackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
           const rNoUpper = formData.rNo.toUpperCase();
 
-          // First, check if already submitted in our backend
+          // First, check if already enrolled in backend
           const checkResponse = await fetch(`${ourBackendUrl}/api/orientation/check/${rNoUpper}`);
           if (checkResponse.ok) {
             const checkData = await checkResponse.json();
             if (checkData.exists) {
-              setDuplicateError('This roll number is already submitted.');
+              setDuplicateError('This roll number is already enrolled.')
               setIsLoading(false);
               return;
             }
           }
 
           // Fetch from student API
-          const studentApiUrl = import.meta.env.VITE_STUDENT_API_URL;
-          const response = await fetch(`${studentApiUrl}/${rNoUpper}`);
+          const studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || '/adityaapi/api/studentdata';
+          const response = await fetch(`${studentApiUrl}?rNo=${rNoUpper}`);
 
           if (response.ok) {
             const data = await response.json();
             if (data && data.length > 0) {
               const student = data[0];
-              console.log('Student Data:', student);
               setFormData(prev => ({
                 ...prev,
                 rNo: rNoUpper,
-                name: student.studentname || student.name || prev.name,
-                location: student.campus || student.district || prev.location,
-                branch: student.branch || student.program || prev.branch,
-                phone: student.mobilenumber || student.mobile || prev.phone
+                name: student.name || prev.name,
+                location: student.campus || prev.location,
+                branch: student.program || prev.branch,
+                phone: student.mobile || prev.phone
               }));
             }
           }
@@ -157,6 +157,11 @@ const OrientationForm = () => {
           <div className="welcome-modal-content">
             <h3>Welcome to Aditya University</h3>
             <p>We are glad to have you here.</p>
+            <img
+              src="/orinetatation logo.png"
+              alt="Orientation Logo"
+              className="welcome-orientation-logo"
+            />
             <button
               className="welcome-ok-btn"
               onClick={() => setShowWelcomeModal(false)}
@@ -195,7 +200,8 @@ const OrientationForm = () => {
                       required
                       style={{
                         width: '100%',
-                        borderColor: duplicateError ? '#ef4444' : ''
+                        borderColor: duplicateError ? '#ef4444' : '',
+                        textAlign: 'left'
                       }}
                     />
                     {isLoading && <span className="loading-spinner"></span>}
@@ -236,7 +242,7 @@ const OrientationForm = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="location">Address</label>
+                  <label htmlFor="location">Location</label>
                   <div className="input-with-icon">
                     <div className="field-icon-wrapper">
                       <MapPin size={20} />
@@ -300,7 +306,7 @@ const OrientationForm = () => {
               </label>
               <div className="input-with-icon">
                 <div className="field-icon-wrapper question-icon">
-                  <HelpCircle size={20} color="white" />
+                  <HelpCircle size={20} />
                 </div>
                 <input
                   type="number"
@@ -324,8 +330,8 @@ const OrientationForm = () => {
                 cursor: (isLoading || !!duplicateError) ? 'not-allowed' : 'pointer'
               }}
             >
-              Submit Details
-              <ArrowRight size={20} />
+              Submit
+              {/* <ArrowRight size={20} /> */}
             </button>
           </form>
         </div>
