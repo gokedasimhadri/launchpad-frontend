@@ -1,28 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, TrendingUp, Calendar, MoreHorizontal, Users } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useTheme } from '../context/ThemeContext';
+import { BookOpen, MoreHorizontal } from 'lucide-react';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts';
 import './Dashboard.css';
-
-const MOCK_WEEKLY_DATA = [
-  { name: 'Mon', attendance: 2 },
-  { name: 'Tue', attendance: 6 },
-  { name: 'Wed', attendance: 6 },
-  { name: 'Thu', attendance: 11 },
-  { name: 'Fri', attendance: 9 },
-  { name: 'Sat', attendance: 12 },
-  { name: 'Sun', attendance: 14 }
-];
-
-const MOCK_HOURLY_DATA = [
-  { name: '9 AM', attendance: 1 },
-  { name: '11 AM', attendance: 3 },
-  { name: '1 PM', attendance: 5 },
-  { name: '3 PM', attendance: 8 },
-  { name: '5 PM', attendance: 12 },
-  { name: '7 PM', attendance: 14 },
-  { name: '9 PM', attendance: 15 }
-];
 
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
 const BRANCH_ICONS = {
@@ -33,18 +12,9 @@ const BRANCH_ICONS = {
 };
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({ totalStudents: 0, branchStats: [], weeklyData: [], hourlyData: [] });
+  const [stats, setStats] = useState({ totalStudents: 0, branchStats: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [chartFilter, setChartFilter] = useState('week');
-  const { theme } = useTheme();
-
-  const chartColor = theme === 'light' ? '#0b5299' : '#BE9337';
-  
-  const dbWeeklyData = (stats.weeklyData && stats.weeklyData.length > 0) ? stats.weeklyData : MOCK_WEEKLY_DATA;
-  const dbHourlyData = (stats.hourlyData && stats.hourlyData.length > 0) ? stats.hourlyData : MOCK_HOURLY_DATA;
-  
-  const activeChartData = chartFilter === 'day' ? dbHourlyData : dbWeeklyData;
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -100,8 +70,7 @@ const Dashboard = () => {
     <div className="dashboard-page">
       <div className="dashboard-header-row">
         <div>
-          <h1>Welcome back, Dean!</h1>
-          <p>Here's what's happening with orientation attendance.</p>
+          <h1>Welcome</h1>
         </div>
       </div>
 
@@ -115,139 +84,77 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="dashboard-section">
-        <h2>Branch-wise Statistics</h2>
-        <div className="branch-grid-horizontal">
-          {processedBranchStats.map((branch, index) => {
-            const IconComponent = BRANCH_ICONS[branch.name] || BookOpen;
-            const branchColor = COLORS[index % COLORS.length];
-            return (
-              <div key={branch.name} className="branch-stat-card glass-card">
-                <div className="branch-card-header">
-                  <div className="branch-icon-box" style={{ background: `${branchColor}20`, color: branchColor }}>
-                    <IconComponent size={20} />
-                  </div>
-                  <div className="branch-card-title">
-                    <h4>{branch.name}</h4>
-                    <div className="branch-count">{branch.value}</div>
-                    <span>{branch.value === 1 ? 'Student' : 'Students'}</span>
+      <div className="dashboard-content-grid">
+        <div className="dashboard-section">
+          <h2>Branch-wise Statistics</h2>
+          <div className="branch-grid">
+            {processedBranchStats.map((branch, index) => {
+              const IconComponent = BRANCH_ICONS[branch.name] || BookOpen;
+              const branchColor = COLORS[index % COLORS.length];
+              return (
+                <div key={branch.name} className="branch-stat-card glass-card">
+                  <div className="branch-card-header">
+                    <div className="branch-icon-box" style={{ background: `${branchColor}20`, color: branchColor }}>
+                      <IconComponent size={18} />
+                    </div>
+                    <div className="branch-card-title">
+                      <h4>{branch.name}</h4>
+                      <div className="branch-count">{branch.value}</div>
+                      <span>{branch.value === 1 ? 'Student' : 'Students'}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="progress-container">
-                  <div className="progress-bar-bg">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ width: `${branch.percentage}%`, background: branchColor }}
-                    ></div>
-                  </div>
-                  <span className="progress-percentage" style={{ color: branchColor }}>{branch.percentage}%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="charts-grid">
-        <div className="chart-card glass-card">
-          <div className="chart-header">
-            <div className="chart-title">
-              <div className="chart-title-icon" style={{ background: `${chartColor}18` }}>
-                <TrendingUp size={18} color={chartColor} />
-              </div>
-              <h3>Attendance Overview</h3>
-            </div>
-            <div className="chart-filter">
-              <select 
-                value={chartFilter} 
-                onChange={(e) => setChartFilter(e.target.value)}
-                className="chart-filter-select"
-              >
-                <option value="week">This Week</option>
-                <option value="day">This Day</option>
-              </select>
-            </div>
-          </div>
-          <div className="chart-body">
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor={chartColor} stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: theme === 'light' ? '#64748b' : '#94a3b8', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: theme === 'light' ? '#64748b' : '#94a3b8', fontSize: 12 }} />
-                <RechartsTooltip 
-                  contentStyle={{ 
-                    background: theme === 'light' ? '#ffffff' : '#1e293b', 
-                    border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.1)', 
-                    borderRadius: '8px', 
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
-                  }}
-                  itemStyle={{ color: theme === 'light' ? '#1e293b' : '#f8fafc' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="attendance" 
-                  stroke={chartColor} 
-                  strokeWidth={3} 
-                  fillOpacity={1} 
-                  fill="url(#colorAttendance)"
-                  dot={{ r: 4, fill: theme === 'light' ? '#ffffff' : '#1e293b', strokeWidth: 2, stroke: chartColor }} 
-                  activeDot={{ r: 6 }} 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+              );
+            })}
           </div>
         </div>
 
-        <div className="chart-card glass-card">
-          <div className="chart-header">
-            <h3>Attendance Distribution</h3>
-            <MoreHorizontal size={20} className="more-icon" />
-          </div>
-          <div className="donut-body">
-            <div className="donut-chart-wrapper">
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={processedBranchStats}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={85}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                    cornerRadius={5}
-                  >
-                    {processedBranchStats.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip 
-                    contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                    itemStyle={{ color: '#1e293b' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="donut-center-text">
-                <h2>{stats.totalStudents}</h2>
-                <p>Total</p>
-              </div>
+        <div className="dashboard-section">
+          <div className="chart-card glass-card" style={{ marginTop: '2.1rem' }}>
+            <div className="chart-header">
+              <h3>Attendance Distribution</h3>
+              <MoreHorizontal size={20} className="more-icon" />
             </div>
-            <div className="custom-legend">
-              {processedBranchStats.map((branch, index) => (
-                <div key={branch.name} className="legend-item">
-                  <span className="legend-color" style={{ background: COLORS[index] }}></span>
-                  <span className="legend-name">{branch.name}</span>
-                  <span className="legend-count">{branch.value} {branch.value === 1 ? 'Student' : 'Students'}</span>
-                  <span className="legend-percentage">{branch.percentage}%</span>
+            <div className="donut-body">
+              <div className="donut-chart-wrapper">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={processedBranchStats}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={85}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                      cornerRadius={5}
+                    >
+                      {processedBranchStats.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                      itemStyle={{ color: '#1e293b' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="donut-center-text">
+                  <h2>{stats.totalStudents}</h2>
+                  <p>Total</p>
                 </div>
-              ))}
+              </div>
+              <div className="custom-legend">
+                {processedBranchStats.map((branch, index) => (
+                  <div key={branch.name} className="legend-item">
+                    <span className="legend-color" style={{ background: COLORS[index] }}></span>
+                    <span className="legend-name">{branch.name}</span>
+                    <span className="legend-count">{branch.value} {branch.value === 1 ? 'Student' : 'Students'}</span>
+                    <span className="legend-percentage">{branch.percentage}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
