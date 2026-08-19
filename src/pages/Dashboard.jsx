@@ -3,7 +3,7 @@ import { BookOpen, MoreHorizontal } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts';
 import './Dashboard.css';
 
-const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
+const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#14b8a6', '#f43f5e', '#a855f7', '#84cc16'];
 const BRANCH_ICONS = {
   'Ag.E': BookOpen,
   'AIML': BookOpen,
@@ -55,14 +55,12 @@ const Dashboard = () => {
     );
   }
 
-  // Ensure 4 specific branches for the donut chart and cards
-  const activeBranches = ['Ag.E', 'AIML', 'MEC', 'CSE'];
-  const processedBranchStats = activeBranches.map(branchName => {
-    const found = stats.branchStats.find(b => b.name === branchName);
+  // Process all branches dynamically
+  const processedBranchStats = stats.branchStats.map(branch => {
     return {
-      name: branchName,
-      value: found ? found.count : 0,
-      percentage: stats.totalStudents > 0 ? ((found ? found.count : 0) / stats.totalStudents * 100).toFixed(0) : 0
+      name: branch.name,
+      value: branch.count,
+      percentage: stats.totalStudents > 0 ? (branch.count / stats.totalStudents * 100).toFixed(0) : 0
     };
   });
 
