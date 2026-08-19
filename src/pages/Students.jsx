@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Filter, Search } from 'lucide-react';
+import { Download, Filter, Search, Calendar } from 'lucide-react';
 import './Students.css';
 
 const Students = () => {
@@ -8,6 +8,7 @@ const Students = () => {
   const [error, setError] = useState('');
   const [filterBranch, setFilterBranch] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +18,10 @@ const Students = () => {
     const fetchStudents = async () => {
       try {
         const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
-        const response = await fetch(`${backendUrl}/api/orientation`);
+        const url = selectedDate 
+          ? `${backendUrl}/api/orientation?date=${selectedDate}`
+          : `${backendUrl}/api/orientation`;
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           setStudents(data);
@@ -32,7 +36,7 @@ const Students = () => {
     };
 
     fetchStudents();
-  }, []);
+  }, [selectedDate]);
 
   // Get unique branches for the filter dropdown
   const uniqueBranches = ['All', ...new Set(students.map(s => s.branch))];
@@ -139,6 +143,16 @@ const Students = () => {
               <option key={branch} value={branch}>{branch}</option>
             ))}
           </select>
+        </div>
+
+        <div className="date-filter-container" style={{ marginLeft: 'auto', background: 'transparent' }}>
+          <Calendar size={18} className="date-filter-icon" />
+          <input 
+            type="date" 
+            value={selectedDate} 
+            onChange={(e) => setSelectedDate(e.target.value)} 
+            className="date-filter-input"
+          />
         </div>
       </div>
 

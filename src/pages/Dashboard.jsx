@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, MoreHorizontal } from 'lucide-react';
+import { BookOpen, MoreHorizontal, Calendar, Users, ClipboardCheck } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts';
 import './Dashboard.css';
 
@@ -13,14 +13,19 @@ const BRANCH_ICONS = {
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ totalStudents: 0, branchStats: [] });
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchStats = async () => {
+      setIsLoading(true);
       try {
         const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
-        const response = await fetch(`${backendUrl}/api/statistics`);
+        const url = selectedDate 
+          ? `${backendUrl}/api/statistics?date=${selectedDate}`
+          : `${backendUrl}/api/statistics`;
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           setStats(data);
@@ -35,7 +40,7 @@ const Dashboard = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [selectedDate]);
 
   if (isLoading) {
     return (
@@ -66,18 +71,41 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-header-row">
+      <div className="dashboard-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h1>Welcome</h1>
+        </div>
+        <div className="date-filter-container">
+          <Calendar size={18} className="date-filter-icon" />
+          <input 
+            type="date" 
+            value={selectedDate} 
+            onChange={(e) => setSelectedDate(e.target.value)} 
+            className="date-filter-input"
+          />
         </div>
       </div>
 
       {/* Hero Banner */}
       <div className="hero-banner">
-        <div className="hero-content">
-          <div className="hero-text">
-            <h3>Total Attended</h3>
-            <h2>{stats.totalStudents}</h2>
+        <div className="hero-content" style={{ display: 'flex', gap: '3.5rem', flexWrap: 'wrap' }}>
+          <div className="hero-text" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.15)', padding: '0.9rem', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <Users size={32} color="#ffffff" />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Participants</h3>
+              <h2 style={{ margin: 0, fontSize: '2.5rem', lineHeight: 1.1 }}>{stats.totalStudents}</h2>
+            </div>
+          </div>
+          <div className="hero-text" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.15)', padding: '0.9rem', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <ClipboardCheck size={32} color="#ffffff" />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Attended</h3>
+              <h2 style={{ margin: 0, fontSize: '2.5rem', lineHeight: 1.1 }}>{stats.totalAttended || 0}</h2>
+            </div>
           </div>
         </div>
       </div>
