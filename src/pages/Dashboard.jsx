@@ -22,7 +22,7 @@ const Dashboard = () => {
       setIsLoading(true);
       try {
         const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
-        const url = selectedDate 
+        const url = selectedDate
           ? `${backendUrl}/api/statistics?date=${selectedDate}`
           : `${backendUrl}/api/statistics`;
         const response = await fetch(url);
@@ -77,10 +77,10 @@ const Dashboard = () => {
         </div>
         <div className="date-filter-container">
           <Calendar size={18} className="date-filter-icon" />
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)} 
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
             className="date-filter-input"
           />
         </div>
@@ -94,7 +94,7 @@ const Dashboard = () => {
               <Users size={32} color="#ffffff" />
             </div>
             <div>
-              <h3 style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Participants</h3>
+              <h3 style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Student Participations</h3>
               <h2 style={{ margin: 0, fontSize: '2.5rem', lineHeight: 1.1 }}>{stats.totalStudents}</h2>
             </div>
           </div>
