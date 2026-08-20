@@ -100,7 +100,7 @@ const OrientationForm = () => {
       return;
     }
 
-    if (!formData.rNo || !formData.name || !formData.branch || !formData.location || !formData.phone) {
+    if (!formData.rNo || !formData.name || !formData.branch || !formData.phone) {
       showNotification('Please fill in all required fields.', 'error');
       return;
     }
