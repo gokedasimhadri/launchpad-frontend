@@ -10,7 +10,6 @@ const OrientationForm = () => {
   const [formData, setFormData] = useState({
     rNo: '',
     name: '',
-    location: '',
     branch: '',
     phone: '',
     attendanceCount: ''
@@ -66,7 +65,6 @@ const OrientationForm = () => {
                 ...prev,
                 rNo: rNoUpper,
                 name: student.studentname || student.name || prev.name,
-                location: student.campus || student.district || prev.location,
                 branch: student.branch || student.program || prev.branch,
                 phone: student.mobilenumber || student.mobile || prev.phone
               }));
@@ -117,7 +115,6 @@ const OrientationForm = () => {
         body: JSON.stringify({
           rNo: formData.rNo,
           name: formData.name,
-          location: formData.location,
           branch: formData.branch,
           phone: formData.phone,
           attendanceCount: parseInt(formData.attendanceCount, 10) || 1
@@ -129,7 +126,6 @@ const OrientationForm = () => {
         setFormData({
           rNo: '',
           name: '',
-          location: '',
           branch: '',
           phone: '',
           attendanceCount: ''
@@ -248,24 +244,7 @@ const OrientationForm = () => {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="location">Location</label>
-                  <div className="input-with-icon">
-                    <div className="field-icon-wrapper">
-                      <MapPin size={20} />
-                    </div>
-                    <input
-                      type="text"
-                      id="location"
-                      name="location"
-                      placeholder="Enter your location"
-                      value={formData.location}
-                      onChange={handleChange}
-                      // required
-                      readOnly
-                    />
-                  </div>
-                </div>
+
               </div>
 
               <div className="form-row">
