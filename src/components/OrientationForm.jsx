@@ -50,12 +50,12 @@ const OrientationForm = () => {
 
           // Fetch from student API
           let studentApiUrl = import.meta.env.VITE_STUDENT_API_URL;
-          
+
           // Strip the domain so the local Vite proxy can intercept and avoid CORS
           if (studentApiUrl && studentApiUrl.includes('https://info.aec.edu.in')) {
             studentApiUrl = studentApiUrl.replace('https://info.aec.edu.in', '');
           }
-          
+
           const response = await fetch(`${studentApiUrl}/${rNoUpper}`);
 
           if (response.ok) {
@@ -261,7 +261,7 @@ const OrientationForm = () => {
                       placeholder="Enter your location"
                       value={formData.location}
                       onChange={handleChange}
-                      required
+                      // required
                       readOnly
                     />
                   </div>
