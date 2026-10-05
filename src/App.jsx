@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import OrientationForm from './components/OrientationForm';
+import StudentPaymentForm from './components/StudentPaymentForm';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
@@ -23,8 +24,10 @@ function App() {
             <Route path="scanqr" element={<ScanQR />} />
           </Route>
           
-          {/* Public Orientation Form Route */}
+          {/* Public Routes */}
           <Route path="/orientation" element={<OrientationForm />} />
+          <Route path="/student-pay" element={<StudentPaymentForm />} />
+          <Route path="/pay" element={<StudentPaymentForm />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
