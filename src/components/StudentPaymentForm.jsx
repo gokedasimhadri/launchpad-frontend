@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, ShieldCheck, CheckCircle2, Lock, Sparkles, RefreshCw } from 'lucide-react';
+import { CreditCard, ShieldCheck, CheckCircle2, Lock, Sparkles, RefreshCw, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import CelestialLogo from './CelestialLogo';
 import './StudentPaymentForm.css';
 
 const StudentPaymentForm = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [notification, setNotification] = useState(null);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [feeAmount, setFeeAmount] = useState(100);
@@ -93,6 +94,12 @@ const StudentPaymentForm = () => {
           color: '#ff5e00'
         },
         handler: async function (response) {
+          // Immediately display payment verification loader on page without refreshing
+          setIsVerifyingPayment(true);
+          setIsProcessingPayment(false);
+
+          const startTime = Date.now();
+
           try {
             // 3. Verify Payment with backend
             const verifyRes = await fetch(`${backendUrl}/api/payment/verify-payment`, {
@@ -113,6 +120,12 @@ const StudentPaymentForm = () => {
             });
 
             const verifyData = await verifyRes.json();
+
+            // Ensure loader displays for at least 1.5s for smooth visual feedback
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < 1500) {
+              await new Promise(res => setTimeout(res, 1500 - elapsedTime));
+            }
 
             if (verifyRes.ok && verifyData.success) {
               setPaymentSuccessData({
@@ -141,7 +154,7 @@ const StudentPaymentForm = () => {
               date: new Date().toLocaleDateString()
             });
           } finally {
-            setIsProcessingPayment(false);
+            setIsVerifyingPayment(false);
           }
         },
         modal: {
@@ -155,11 +168,15 @@ const StudentPaymentForm = () => {
         const rzp = new window.Razorpay(options);
         rzp.on('payment.failed', function (resp) {
           setIsProcessingPayment(false);
+          setIsVerifyingPayment(false);
           showNotification(resp.error.description || 'Payment failed.', 'error');
         });
         rzp.open();
       } else {
         // Demo fallback when Razorpay script is unavailable or mock key
+        setIsVerifyingPayment(true);
+        setIsProcessingPayment(false);
+
         setTimeout(async () => {
           const mockPaymentId = `pay_demo_${Date.now()}`;
           await fetch(`${backendUrl}/api/payment/verify-payment`, {
@@ -192,18 +209,21 @@ const StudentPaymentForm = () => {
             })
           });
           showNotification('Payment Completed!');
-          setIsProcessingPayment(false);
-        }, 1200);
+          setIsVerifyingPayment(false);
+        }, 2000);
       }
     } catch (err) {
       console.error('Payment error:', err);
       showNotification(err.message || 'Error opening payment gateway.', 'error');
       setIsProcessingPayment(false);
+      setIsVerifyingPayment(false);
     }
   };
 
   const resetForm = () => {
     setPaymentSuccessData(null);
+    setIsVerifyingPayment(false);
+    setIsProcessingPayment(false);
   };
 
   return (
@@ -216,7 +236,23 @@ const StudentPaymentForm = () => {
         </div>
       )}
 
-      {paymentSuccessData ? (
+      {isVerifyingPayment ? (
+        <div className="glass-card verifying-card">
+          <div className="verifying-loader-wrapper">
+            <div className="pulsing-glow-ring"></div>
+            <Loader2 size={56} className="spinning-loader-icon" />
+          </div>
+          <h2>Verifying Payment...</h2>
+          <p className="verifying-subtitle">Please wait a moment while we process your transaction.</p>
+          <div className="verifying-progress-bar-container">
+            <div className="verifying-progress-bar-fill"></div>
+          </div>
+          <div className="verifying-security-badge">
+            <ShieldCheck size={16} color="#ff8c42" />
+            <span>Communicating with Razorpay Servers</span>
+          </div>
+        </div>
+      ) : paymentSuccessData ? (
         <div className="glass-card receipt-card">
           <div className="receipt-header">
             <div className="success-badge-circle">
@@ -242,7 +278,7 @@ const StudentPaymentForm = () => {
             </div>
             <div className="receipt-row">
               <span>Purpose</span>
-              <strong>Orientation Registration</strong>
+              <strong>HRFinity Payment</strong>
             </div>
             <div className="receipt-row">
               <span>Date & Time</span>
@@ -280,7 +316,7 @@ const StudentPaymentForm = () => {
               </div>
               <div className="purpose-pill">
                 <Sparkles size={15} />
-                <span>Orientation Fee</span>
+                <span>HRFinity Fee</span>
               </div>
             </div>
           </div>
