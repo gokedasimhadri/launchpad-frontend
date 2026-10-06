@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from './context/ThemeContext';
 import OrientationForm from './components/OrientationForm';
 import StudentPaymentForm from './components/StudentPaymentForm';
+import StudentPaymentForm2 from './components/StudentPaymentForm2';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
@@ -28,6 +29,11 @@ function App() {
           <Route path="/orientation" element={<OrientationForm />} />
           <Route path="/student-pay" element={<StudentPaymentForm />} />
           <Route path="/pay" element={<StudentPaymentForm />} />
+          
+          {/* 2 Rupees Payment Routes */}
+          <Route path="/student-pay-2" element={<StudentPaymentForm2 />} />
+          <Route path="/pay-2" element={<StudentPaymentForm2 />} />
+
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
