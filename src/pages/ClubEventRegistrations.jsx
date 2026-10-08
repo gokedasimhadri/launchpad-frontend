@@ -22,7 +22,8 @@ import {
   User,
   GraduationCap,
   Layers,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck
 } from 'lucide-react';
 import './ClubEventRegistrations.css';
 
@@ -51,6 +52,61 @@ const ClubEventRegistrations = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Sync state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [manualTxnInput, setManualTxnInput] = useState('');
+  const [isVerifyingSingle, setIsVerifyingSingle] = useState(false);
+
+  const handleSyncAllPending = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/club-events/sync-all-pending`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message || `Synced ${data.syncedCount || 0} payment(s)`);
+        fetchRegistrations();
+      } else {
+        showToast(data.message || 'Failed to sync payments', 'error');
+      }
+    } catch (err) {
+      console.error('Sync error:', err);
+      showToast('Network error while syncing payments', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleVerifySinglePayment = async (reg, customTxnId = '') => {
+    setIsVerifyingSingle(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/club-events/verify-razorpay-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registrationId: reg._id,
+          rNo: reg.rNo,
+          razorpayPaymentId: customTxnId || manualTxnInput
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message || `Verified & Paid for ${reg.rNo}!`);
+        setSelectedRecord(null);
+        setManualTxnInput('');
+        fetchRegistrations();
+      } else {
+        showToast(data.message || 'Verification failed.', 'error');
+      }
+    } catch (err) {
+      console.error('Verification error:', err);
+      showToast('Network error during verification.', 'error');
+    } finally {
+      setIsVerifyingSingle(false);
+    }
+  };
 
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
 
@@ -199,6 +255,7 @@ const ClubEventRegistrations = () => {
       'S.No',
       'Roll Number',
       'Student Name',
+      'Email',
       'Event Name',
       'Branch',
       'Gender',
@@ -216,12 +273,13 @@ const ClubEventRegistrations = () => {
       index + 1,
       r.rNo || '',
       `"${(r.name || '').replace(/"/g, '""')}"`,
+      `"${(r.email || '').replace(/"/g, '""')}"`,
       `"${(r.eventName || '').replace(/"/g, '""')}"`,
       r.branch || '',
       r.gender || '',
       r.bloodgroup || '',
       r.phone || '',
-      r.amountPaid !== undefined ? r.amountPaid : 0,
+      Math.floor(r.amountPaid !== undefined ? r.amountPaid : 0),
       r.paymentStatus || '',
       `"${(r.transactionId || r.razorpayPaymentId || '').replace(/"/g, '""')}"`,
       `"${(r.razorpayPaymentId || '').replace(/"/g, '""')}"`,
@@ -278,6 +336,16 @@ const ClubEventRegistrations = () => {
           <button className="header-refresh-btn" onClick={fetchRegistrations} title="Refresh records">
             <RefreshCw size={17} className={isLoading ? 'spinning' : ''} />
             <span>Refresh</span>
+          </button>
+          <button
+            className="export-csv-btn"
+            onClick={handleSyncAllPending}
+            disabled={isSyncing}
+            title="Scan and sync all pending registrations against Razorpay live transactions"
+            style={{ background: '#10b981', borderColor: '#10b981' }}
+          >
+            <ShieldCheck size={18} className={isSyncing ? 'spinning' : ''} />
+            <span>{isSyncing ? 'Syncing...' : 'Sync Razorpay'}</span>
           </button>
           <button
             className="export-csv-btn"
@@ -339,7 +407,7 @@ const ClubEventRegistrations = () => {
           </div>
           <div className="stat-meta">
             <div className="stat-label">Total Collections</div>
-            <div className="stat-val">₹{Number(stats.totalRevenue || 0).toLocaleString('en-IN')}</div>
+            <div className="stat-val">₹{Math.floor(Number(stats.totalRevenue || 0)).toLocaleString('en-IN')}</div>
           </div>
         </div>
       </div>
@@ -521,7 +589,7 @@ const ClubEventRegistrations = () => {
                         </td>
                         <td className="amount-cell">
                           {reg.amountPaid && Number(reg.amountPaid) > 0 ? (
-                            <span className="amount-val">₹{reg.amountPaid}</span>
+                            <span className="amount-val">₹{Math.floor(Number(reg.amountPaid))}</span>
                           ) : (
                             <span className="amount-free">Free</span>
                           )}
@@ -567,7 +635,18 @@ const ClubEventRegistrations = () => {
                         <td className="date-cell">
                           <span className="date-text">{formatDate(reg.createdAt)}</span>
                         </td>
-                        <td className="action-cell" style={{ textAlign: 'center' }}>
+                        <td className="action-cell" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                          {reg.paymentStatus === 'pending' && (
+                            <button
+                              className="view-btn"
+                              onClick={() => handleVerifySinglePayment(reg)}
+                              disabled={isVerifyingSingle}
+                              title="Verify & Sync Payment with Razorpay Gateway"
+                              style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+                            >
+                              <ShieldCheck size={16} />
+                            </button>
+                          )}
                           <button
                             className="view-btn"
                             onClick={() => setSelectedRecord(reg)}
@@ -684,6 +763,10 @@ const ClubEventRegistrations = () => {
                     <span className="value strong">{selectedRecord.name}</span>
                   </div>
                   <div className="detail-item">
+                    <span className="label">Email Address</span>
+                    <span className="value">{selectedRecord.email || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
                     <span className="label">Branch</span>
                     <span className="value">{selectedRecord.branch || 'N/A'}</span>
                   </div>
@@ -728,9 +811,50 @@ const ClubEventRegistrations = () => {
                   <div className="detail-item">
                     <span className="label">Amount</span>
                     <span className="value strong amount-highlight">
-                      ₹{selectedRecord.amountPaid || 0}
+                      ₹{Math.floor(Number(selectedRecord.amountPaid || 0))}
                     </span>
                   </div>
+                  {selectedRecord.paymentStatus === 'pending' && (
+                    <div className="detail-item full-width" style={{ background: 'rgba(16, 185, 129, 0.08)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.25)', marginTop: '0.5rem' }}>
+                      <span className="label" style={{ color: '#10b981', fontWeight: '700', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <ShieldCheck size={16} />
+                        <span>Verify Payment with Razorpay</span>
+                      </span>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                        If amount was deducted from student's account but status is pending, enter Razorpay Payment ID below (or leave blank to auto-search order).
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          placeholder="Enter Razorpay Payment ID (e.g. pay_TlHaG6rJi1aaqi)"
+                          value={manualTxnInput}
+                          onChange={(e) => setManualTxnInput(e.target.value)}
+                          style={{ flex: 1, fontSize: '0.88rem', height: '40px', padding: '0 0.75rem' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleVerifySinglePayment(selectedRecord, manualTxnInput)}
+                          disabled={isVerifyingSingle}
+                          style={{
+                            background: '#10b981',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '0 1rem',
+                            fontWeight: '600',
+                            fontSize: '0.88rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                          }}
+                        >
+                          <ShieldCheck size={15} />
+                          <span>{isVerifyingSingle ? 'Verifying...' : 'Verify & Mark Paid'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {selectedRecord.paymentStatus === 'pending' && (
                     <div className="detail-item full-width" style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
                       <span className="label" style={{ color: '#f59e0b', fontWeight: '700', marginBottom: '0.35rem', display: 'block' }}>Direct Payment Link for Student</span>

@@ -31,12 +31,19 @@ const Login = () => {
         body: JSON.stringify(credentials)
       });
 
-      if (response.ok) {
-        // Simple auth state: store in localStorage (for demo purposes)
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         localStorage.setItem('isAuthenticated', 'true');
-        navigate('/dashboard');
+        localStorage.setItem('userRole', data.role || 'admin');
+        localStorage.setItem('userAccount', JSON.stringify(data));
+
+        if (data.role === 'club_manager') {
+          navigate('/dashboard/events/club-events');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        const data = await response.json();
         setError(data.message || 'Invalid credentials');
       }
     } catch (err) {

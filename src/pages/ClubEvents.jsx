@@ -20,7 +20,8 @@ import {
   Link as LinkIcon,
   ToggleLeft,
   ToggleRight,
-  ClipboardList
+  ClipboardList,
+  Lock
 } from 'lucide-react';
 import './ClubEvents.css';
 
@@ -49,7 +50,9 @@ const ClubEvents = () => {
     amount: '',
     registration: 'open',
     slug_link: '',
-    status: 'active'
+    status: 'active',
+    role: '',
+    password: ''
   });
 
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
@@ -100,7 +103,9 @@ const ClubEvents = () => {
       amount: '',
       registration: 'open',
       slug_link: '',
-      status: 'active'
+      status: 'active',
+      role: '',
+      password: ''
     });
     setFormError('');
     setIsFormModalOpen(true);
@@ -114,7 +119,9 @@ const ClubEvents = () => {
       amount: event.amount !== undefined ? event.amount : '',
       registration: event.registration || 'open',
       slug_link: event.slug_link || '',
-      status: event.status || 'active'
+      status: event.status || 'active',
+      role: event.role || '',
+      password: event.password || ''
     });
     setFormError('');
     setIsFormModalOpen(true);
@@ -162,7 +169,9 @@ const ClubEvents = () => {
         amount: Number(formData.amount),
         registration: formData.registration,
         slug_link: cleanSlug,
-        status: formData.status
+        status: formData.status,
+        role: formData.role ? formData.role.trim() : '',
+        password: formData.password ? formData.password.trim() : ''
       };
 
       const url = editingEvent
@@ -428,6 +437,7 @@ const ClubEvents = () => {
             <tr>
               <th style={{ width: '60px' }}>S.No</th>
               <th>Club Event Name</th>
+              <th>Role Username</th>
               <th>Amount</th>
               <th>Registration</th>
               <th>Slug Link</th>
@@ -439,7 +449,7 @@ const ClubEvents = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '3rem' }}>
+                <td colSpan="9" style={{ textAlign: 'center', padding: '3rem' }}>
                   <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
                   <p style={{ color: 'var(--text-muted)' }}>Loading club events...</p>
                 </td>
@@ -455,6 +465,22 @@ const ClubEvents = () => {
                       </div>
                       <div className="event-name-title">{event.name}</div>
                     </div>
+                  </td>
+                  <td>
+                    {event.role ? (
+                      <span style={{
+                        background: 'rgba(13, 35, 59, 0.08)',
+                        color: 'var(--primary-color)',
+                        padding: '0.2rem 0.65rem',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        fontSize: '0.82rem'
+                      }}>
+                        {event.role}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+                    )}
                   </td>
                   <td>
                     <span className="amount-tag">
@@ -676,6 +702,46 @@ const ClubEvents = () => {
                       Reset from name
                     </button>
                   </div>
+                </div>
+
+                {/* Role / Username for login */}
+                <div className="form-group">
+                  <label className="form-label">
+                    Role Name / Username (For Frontend Login)
+                  </label>
+                  <div className="form-input-group">
+                    <Users size={16} className="input-prefix-icon" />
+                    <input
+                      type="text"
+                      className="form-input has-prefix"
+                      placeholder="e.g. leoclub or robotics_admin"
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    />
+                  </div>
+                  <span className="helper-text" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Username used to log into frontend with event privileges
+                  </span>
+                </div>
+
+                {/* Password for login */}
+                <div className="form-group">
+                  <label className="form-label">
+                    Role Password
+                  </label>
+                  <div className="form-input-group">
+                    <Lock size={16} className="input-prefix-icon" />
+                    <input
+                      type="password"
+                      className="form-input has-prefix"
+                      placeholder="Enter password for role"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                  </div>
+                  <span className="helper-text" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Password required for role login
+                  </span>
                 </div>
 
                 {/* Status (Active / Inactive) */}

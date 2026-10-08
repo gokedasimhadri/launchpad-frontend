@@ -15,7 +15,8 @@ import {
   Layers,
   RefreshCw,
   Droplet,
-  Users
+  Users,
+  Mail
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -35,6 +36,7 @@ const ClubEventPublicRegistration = () => {
   const [formData, setFormData] = useState({
     rNo: '',
     name: '',
+    email: '',
     branch: '',
     phone: '',
     gender: '',
@@ -82,109 +84,118 @@ const ClubEventPublicRegistration = () => {
     }
   }, [slug, backendUrl]);
 
-  // 2. Auto-populate Student Data from Roll Number
+  // 2. Auto-populate Student Data from Roll Number & Duplicate Check
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (formData.rNo.length >= 10 && event) {
-        setIsLoadingStudent(true);
+      const cleanRNo = formData.rNo.trim();
+      if (!cleanRNo || cleanRNo.length < 2 || !event) {
         setDuplicateError('');
         setPendingPaymentInfo(null);
-        const rNoUpper = formData.rNo.toUpperCase();
+        return;
+      }
 
-        try {
-          // Check if student already registered for this event
-          const checkRes = await fetch(`${backendUrl}/api/club-events/${slug}/check/${rNoUpper}`);
-          if (checkRes.ok) {
-            const checkData = await checkRes.json();
-            if (checkData.exists) {
-              if (checkData.isPaid) {
-                setDuplicateError('This roll number is already registered and payment is completed.');
-                setIsLoadingStudent(false);
-                return;
-              } else if (checkData.isPendingPayment) {
-                // Registered, but payment pending -> Prompt to go straight to payment!
-                setPendingPaymentInfo({
+      setIsLoadingStudent(true);
+      setDuplicateError('');
+      setPendingPaymentInfo(null);
+      const rNoUpper = cleanRNo.toUpperCase();
+
+      try {
+        // Check if student already registered for this event
+        const checkRes = await fetch(`${backendUrl}/api/club-events/${slug}/check/${rNoUpper}`);
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData.exists) {
+            if (checkData.isPaid) {
+              setDuplicateError('This roll number is already registered and payment is completed.');
+              setIsLoadingStudent(false);
+              return;
+            } else if (checkData.isPendingPayment) {
+              // Registered, but payment pending -> Prompt to go straight to payment!
+              setPendingPaymentInfo({
+                rNo: rNoUpper,
+                message: 'Registration details already saved! Proceed to complete payment.'
+              });
+              if (checkData.registration) {
+                setFormData(prev => ({
+                  ...prev,
                   rNo: rNoUpper,
-                  message: 'Registration details already saved! Proceed to complete payment.'
-                });
-                if (checkData.registration) {
-                  setFormData(prev => ({
-                    ...prev,
-                    rNo: rNoUpper,
-                    name: checkData.registration.name || prev.name,
-                    branch: checkData.registration.branch || prev.branch,
-                    phone: checkData.registration.phone || prev.phone,
-                    gender: checkData.registration.gender || prev.gender,
-                    bloodgroup: checkData.registration.bloodgroup || prev.bloodgroup,
-                  }));
-                }
-                setIsLoadingStudent(false);
-                return;
+                  name: checkData.registration.name || prev.name,
+                  email: checkData.registration.email || prev.email,
+                  branch: checkData.registration.branch || prev.branch,
+                  phone: checkData.registration.phone || prev.phone,
+                  gender: checkData.registration.gender || prev.gender,
+                  bloodgroup: checkData.registration.bloodgroup || prev.bloodgroup,
+                }));
               }
+              setIsLoadingStudent(false);
+              return;
             }
           }
-
-          let student = null;
-
-          // Try 1: Fetch via backend proxy endpoint (uses backend STUDENT_API_KEY securely)
-          try {
-            const backendRes = await fetch(`${backendUrl}/api/student/${rNoUpper}`);
-            if (backendRes.ok) {
-              const bData = await backendRes.json();
-              if (Array.isArray(bData) && bData.length > 0) {
-                student = bData[0];
-              } else if (bData && !Array.isArray(bData) && (bData.studentname || bData.name)) {
-                student = bData;
-              }
-            }
-          } catch (bErr) {
-            console.warn('Backend student proxy error:', bErr);
-          }
-
-          // Try 2: If not resolved yet, fetch via direct/proxied API with X-API-Key header
-          if (!student) {
-            let studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || 'https://info.aec.edu.in/adityaapi/api/studentdata';
-            if (studentApiUrl && studentApiUrl.includes('https://info.aec.edu.in')) {
-              studentApiUrl = studentApiUrl.replace('https://info.aec.edu.in', '');
-            }
-
-            const apiKey = import.meta.env.VITE_STUDENT_API_KEY || '';
-            const headers = {};
-            if (apiKey) {
-              headers['X-API-Key'] = apiKey;
-            }
-
-            const studentRes = await fetch(`${studentApiUrl}/${rNoUpper}`, { headers });
-            if (studentRes.ok) {
-              const data = await studentRes.json();
-              if (Array.isArray(data) && data.length > 0) {
-                student = data[0];
-              } else if (data && !Array.isArray(data) && (data.studentname || data.name)) {
-                student = data;
-              }
-            }
-          }
-
-          if (student) {
-            const rawGender = student.gender && student.gender !== '-' ? student.gender : '';
-            const rawBloodGroup = student.bloodgroup && student.bloodgroup !== '-' ? student.bloodgroup : '';
-            const rawPhone = student.mobilenumber || student.mobile || student.phonenumber || student.phone || '';
-            const cleanPhone = rawPhone && rawPhone !== '-' ? String(rawPhone).trim() : '';
-            setFormData(prev => ({
-              ...prev,
-              rNo: rNoUpper,
-              name: student.studentname || student.name || prev.name,
-              branch: student.branch || student.program || prev.branch,
-              phone: cleanPhone || prev.phone,
-              gender: rawGender || prev.gender,
-              bloodgroup: rawBloodGroup || prev.bloodgroup,
-            }));
-          }
-        } catch (err) {
-          console.error('Auto-populate error:', err);
-        } finally {
-          setIsLoadingStudent(false);
         }
+
+        let student = null;
+
+        // Try 1: Fetch via backend proxy endpoint (uses backend STUDENT_API_KEY securely)
+        try {
+          const backendRes = await fetch(`${backendUrl}/api/student/${rNoUpper}`);
+          if (backendRes.ok) {
+            const bData = await backendRes.json();
+            if (Array.isArray(bData) && bData.length > 0) {
+              student = bData[0];
+            } else if (bData && !Array.isArray(bData) && (bData.studentname || bData.name)) {
+              student = bData;
+            }
+          }
+        } catch (bErr) {
+          console.warn('Backend student proxy error:', bErr);
+        }
+
+        // Try 2: If not resolved yet, fetch via direct/proxied API with X-API-Key header
+        if (!student) {
+          let studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || 'https://info.aec.edu.in/adityaapi/api/studentdata';
+          if (studentApiUrl && studentApiUrl.includes('https://info.aec.edu.in')) {
+            studentApiUrl = studentApiUrl.replace('https://info.aec.edu.in', '');
+          }
+
+          const apiKey = import.meta.env.VITE_STUDENT_API_KEY || '';
+          const headers = {};
+          if (apiKey) {
+            headers['X-API-Key'] = apiKey;
+          }
+
+          const studentRes = await fetch(`${studentApiUrl}/${rNoUpper}`, { headers });
+          if (studentRes.ok) {
+            const data = await studentRes.json();
+            if (Array.isArray(data) && data.length > 0) {
+              student = data[0];
+            } else if (data && !Array.isArray(data) && (data.studentname || data.name)) {
+              student = data;
+            }
+          }
+        }
+
+        if (student) {
+          const rawGender = student.gender && student.gender !== '-' ? student.gender : '';
+          const rawBloodGroup = student.bloodgroup && student.bloodgroup !== '-' ? student.bloodgroup : '';
+          const rawPhone = student.mobilenumber || student.mobile || student.phonenumber || student.phone || '';
+          const cleanPhone = rawPhone && rawPhone !== '-' ? String(rawPhone).trim() : '';
+          const rawEmail = student.email || student.studentemail || student.mail || student.emailid || '';
+          const cleanEmail = rawEmail && rawEmail !== '-' ? String(rawEmail).trim() : '';
+          setFormData(prev => ({
+            ...prev,
+            rNo: rNoUpper,
+            name: student.studentname || student.name || prev.name,
+            email: cleanEmail || prev.email,
+            branch: student.branch || student.program || prev.branch,
+            phone: cleanPhone || prev.phone,
+            gender: rawGender || prev.gender,
+            bloodgroup: rawBloodGroup || prev.bloodgroup,
+          }));
+        }
+      } catch (err) {
+        console.error('Auto-populate error:', err);
+      } finally {
+        setIsLoadingStudent(false);
       }
     };
 
@@ -209,23 +220,47 @@ const ClubEventPublicRegistration = () => {
       return;
     }
 
-    if (!formData.rNo || !formData.name || !formData.branch) {
-      showNotification('Please fill in your roll number and member details.', 'error');
+    const cleanRNo = (formData.rNo || '').trim();
+    const cleanName = (formData.name || '').trim();
+    const cleanEmail = (formData.email || '').trim();
+    const cleanBranch = (formData.branch || '').trim();
+    const cleanGender = (formData.gender || '').trim();
+    const cleanBloodgroup = (formData.bloodgroup || '').trim();
+    const cleanPhone = (formData.phone || '').trim();
+
+    if (!cleanRNo) {
+      showNotification('Please enter your roll number.', 'error');
       return;
     }
 
-    if (!formData.gender) {
+    if (!cleanName) {
+      showNotification('Please enter your full name.', 'error');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      showNotification('Please enter a valid email address.', 'error');
+      return;
+    }
+
+    if (!cleanBranch) {
+      showNotification('Please enter your branch.', 'error');
+      return;
+    }
+
+    if (!cleanGender) {
       showNotification('Please select your gender.', 'error');
       return;
     }
 
-    if (!formData.bloodgroup) {
+    if (!cleanBloodgroup) {
       showNotification('Please select your blood group.', 'error');
       return;
     }
 
-    if (!formData.phone) {
-      showNotification('Please enter your phone number.', 'error');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      showNotification('Please enter a valid 10-digit phone number.', 'error');
       return;
     }
 
@@ -262,6 +297,7 @@ const ClubEventPublicRegistration = () => {
             eventName: event.name,
             amount: 0,
             studentName: formData.name,
+            email: formData.email,
             rNo: formData.rNo,
             branch: formData.branch,
             gender: formData.gender,
@@ -388,6 +424,12 @@ const ClubEventPublicRegistration = () => {
               <span className="receipt-label">Name:</span>
               <span className="receipt-val">{registrationSuccess.studentName}</span>
             </div>
+            {registrationSuccess.email && (
+              <div className="receipt-row">
+                <span className="receipt-label">Email:</span>
+                <span className="receipt-val">{registrationSuccess.email}</span>
+              </div>
+            )}
             <div className="receipt-row">
               <span className="receipt-label">Branch:</span>
               <span className="receipt-val">{registrationSuccess.branch}</span>
@@ -425,6 +467,7 @@ const ClubEventPublicRegistration = () => {
               setFormData({
                 rNo: '',
                 name: '',
+                email: '',
                 branch: '',
                 phone: '',
                 gender: '',
@@ -533,46 +576,46 @@ const ClubEventPublicRegistration = () => {
                 <span className="line"></span>
               </div>
 
-              {/* Row 1: Roll number & Name */}
-              <div className="form-row">
-                {/* 1. Roll number */}
-                <div className="form-group highlight-group">
-                  <label htmlFor="rNo">Roll number</label>
-                  <div className="input-with-icon">
-                    <div className="field-icon-wrapper">
-                      <IdCard size={20} />
-                    </div>
-                    <div className="input-content" style={{ width: '100%' }}>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type="text"
-                          id="rNo"
-                          name="rNo"
-                          placeholder="Enter roll number"
-                          value={formData.rNo}
-                          onChange={handleChange}
-                          required
-                          disabled={isClosed || isInactive}
-                          autoFocus
-                          style={{
-                            width: '100%',
-                            borderColor: duplicateError ? '#ef4444' : '',
-                            textAlign: 'left'
-                          }}
-                        />
-                        {isLoadingStudent && <span className="loading-spinner"></span>}
-                      </div>
+              {/* 1. Roll number (Single Row) */}
+              <div className="form-group highlight-group">
+                <label htmlFor="rNo">Roll number</label>
+                <div className="input-with-icon">
+                  <div className="field-icon-wrapper">
+                    <IdCard size={20} />
+                  </div>
+                  <div className="input-content" style={{ width: '100%' }}>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        id="rNo"
+                        name="rNo"
+                        placeholder="Enter roll number"
+                        value={formData.rNo}
+                        onChange={handleChange}
+                        required
+                        disabled={isClosed || isInactive}
+                        autoFocus
+                        style={{
+                          width: '100%',
+                          borderColor: duplicateError ? '#ef4444' : '',
+                          textAlign: 'left'
+                        }}
+                      />
+                      {isLoadingStudent && <span className="loading-spinner"></span>}
                     </div>
                   </div>
-                  {duplicateError ? (
-                    <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>
-                      {duplicateError}
-                    </span>
-                  ) : (
-                    <span className="helper-text">Enter roll number to auto-populate</span>
-                  )}
                 </div>
+                {duplicateError ? (
+                  <span className="helper-text" style={{ color: '#ef4444', fontWeight: '500' }}>
+                    {duplicateError}
+                  </span>
+                ) : (
+                  <span className="helper-text">Enter roll number to auto-populate</span>
+                )}
+              </div>
 
+              {/* Row 1: Name & Email */}
+              <div className="form-row">
                 {/* 2. Name */}
                 <div className="form-group">
                   <label htmlFor="name">Name</label>
@@ -584,23 +627,45 @@ const ClubEventPublicRegistration = () => {
                       type="text"
                       id="name"
                       name="name"
-                      placeholder="Student Name"
+                      placeholder="Enter full name"
                       value={formData.name}
                       onChange={handleChange}
+                      style={{ textAlign: 'left' }}
                       required
-                      readOnly={Boolean(formData.name && formData.rNo.length >= 10)}
-                      className={formData.name && formData.rNo.length >= 10 ? 'readonly-input' : ''}
                     />
                   </div>
                   <span className="helper-text">
-                    {formData.name ? 'Auto-populated from roll number' : 'Auto-populates from roll number'}
+                    {formData.name ? 'Auto-populated / Editable' : 'Enter full name (auto-populates if available)'}
+                  </span>
+                </div>
+
+                {/* 3. Email */}
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <div className="input-with-icon">
+                    <div className="field-icon-wrapper">
+                      <Mail size={20} />
+                    </div>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      placeholder="Enter email address"
+                      value={formData.email}
+                      onChange={handleChange}
+                      style={{ textAlign: 'left' }}
+                      required
+                    />
+                  </div>
+                  <span className="helper-text">
+                    {formData.email ? 'Auto-populated / Entered email' : 'Enter email address'}
                   </span>
                 </div>
               </div>
 
               {/* Row 2: Branch & Gender */}
               <div className="form-row">
-                {/* 3. Branch */}
+                {/* 4. Branch */}
                 <div className="form-group">
                   <label htmlFor="branch">Branch</label>
                   <div className="input-with-icon">
@@ -611,20 +676,19 @@ const ClubEventPublicRegistration = () => {
                       type="text"
                       id="branch"
                       name="branch"
-                      placeholder="Branch"
+                      placeholder="Enter branch (e.g. CSE, ECE, AI)"
                       value={formData.branch}
                       onChange={handleChange}
+                      style={{ textAlign: 'left' }}
                       required
-                      readOnly={Boolean(formData.branch && formData.rNo.length >= 10)}
-                      className={formData.branch && formData.rNo.length >= 10 ? 'readonly-input' : ''}
                     />
                   </div>
                   <span className="helper-text">
-                    {formData.branch ? 'Auto-populated from roll number' : 'Auto-populates from roll number'}
+                    {formData.branch ? 'Auto-populated / Editable' : 'Enter branch (auto-populates if available)'}
                   </span>
                 </div>
 
-                {/* 4. Gender */}
+                {/* 5. Gender */}
                 <div className="form-group">
                   <label htmlFor="gender">Gender</label>
                   <div className="input-with-icon">
@@ -636,6 +700,7 @@ const ClubEventPublicRegistration = () => {
                       name="gender"
                       value={formData.gender}
                       onChange={handleChange}
+                      style={{ textAlign: 'left' }}
                       required
                     >
                       <option value="">Select Gender</option>
@@ -652,7 +717,7 @@ const ClubEventPublicRegistration = () => {
 
               {/* Row 3: Blood group & Phone number */}
               <div className="form-row">
-                {/* 5. Blood group */}
+                {/* 6. Blood group */}
                 <div className="form-group">
                   <label htmlFor="bloodgroup">Blood group</label>
                   <div className="input-with-icon">
@@ -664,6 +729,7 @@ const ClubEventPublicRegistration = () => {
                       name="bloodgroup"
                       value={formData.bloodgroup}
                       onChange={handleChange}
+                      style={{ textAlign: 'left' }}
                       required
                     >
                       <option value="">Select Blood Group</option>
@@ -680,7 +746,7 @@ const ClubEventPublicRegistration = () => {
                   </span>
                 </div>
 
-                {/* 6. Phone number */}
+                {/* 7. Phone number */}
                 <div className="form-group">
                   <label htmlFor="phone">Phone number</label>
                   <div className="input-with-icon">
@@ -694,13 +760,12 @@ const ClubEventPublicRegistration = () => {
                       placeholder="Enter phone number"
                       value={formData.phone}
                       onChange={handleChange}
+                      style={{ textAlign: 'left' }}
                       required
-                      readOnly={Boolean(formData.phone && formData.rNo.length >= 10)}
-                      className={formData.phone && formData.rNo.length >= 10 ? 'readonly-input' : ''}
                     />
                   </div>
                   <span className="helper-text">
-                    {formData.phone ? 'Auto-populated from roll number' : 'Enter mobile number'}
+                    {formData.phone ? 'Auto-populated / Editable' : 'Enter phone number'}
                   </span>
                 </div>
               </div>

@@ -13,6 +13,8 @@ const DashboardLayout = () => {
   const [eventsMenuOpen, setEventsMenuOpen] = useState(true);
   const { theme } = useTheme();
 
+  const userRole = localStorage.getItem('userRole') || 'admin';
+
   useEffect(() => {
     // Keep students menu open if visiting a student route
     if (location.pathname.startsWith('/dashboard/students')) {
@@ -33,11 +35,22 @@ const DashboardLayout = () => {
     const isAuth = localStorage.getItem('isAuthenticated');
     if (!isAuth) {
       navigate('/');
+      return;
     }
-  }, [navigate]);
+
+    // Role-based route guard for club managers
+    const role = localStorage.getItem('userRole');
+    if (role === 'club_manager') {
+      if (location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/students')) {
+        navigate('/dashboard/events/club-events', { replace: true });
+      }
+    }
+  }, [navigate, location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userAccount');
     navigate('/');
   };
 
@@ -78,51 +91,55 @@ const DashboardLayout = () => {
 
         <nav className="sidebar-nav">
           <ul>
-            {/* Dashboard */}
-            <li>
-              <Link
-                to="/dashboard"
-                className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <LayoutDashboard size={20} />
-                <span>Dashboard</span>
-              </Link>
-            </li>
+            {/* Dashboard (Admin Only) */}
+            {userRole !== 'club_manager' && (
+              <li>
+                <Link
+                  to="/dashboard"
+                  className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <LayoutDashboard size={20} />
+                  <span>Dashboard</span>
+                </Link>
+              </li>
+            )}
 
-            {/* Students Dropdown Group */}
-            <li className="nav-group">
-              <div
-                className={`nav-link has-submenu ${isStudentsActive ? 'active-parent' : ''}`}
-                onClick={() => setStudentsMenuOpen(!studentsMenuOpen)}
-              >
-                <div className="nav-link-content">
-                  <Users size={20} />
-                  <span>Students</span>
+            {/* Students Dropdown Group (Admin Only) */}
+            {userRole !== 'club_manager' && (
+              <li className="nav-group">
+                <div
+                  className={`nav-link has-submenu ${isStudentsActive ? 'active-parent' : ''}`}
+                  onClick={() => setStudentsMenuOpen(!studentsMenuOpen)}
+                >
+                  <div className="nav-link-content">
+                    <Users size={20} />
+                    <span>Students</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={`submenu-arrow ${studentsMenuOpen ? 'rotated' : ''}`}
+                  />
                 </div>
-                <ChevronDown
-                  size={16}
-                  className={`submenu-arrow ${studentsMenuOpen ? 'rotated' : ''}`}
-                />
-              </div>
 
-              {studentsMenuOpen && (
-                <ul className="submenu-list">
-                  <li>
-                    <Link
-                      to="/dashboard/students"
-                      className={`submenu-link ${location.pathname === '/dashboard/students' ? 'active' : ''}`}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <span className="submenu-bullet"></span>
-                      <span>Students List</span>
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </li>
+                {studentsMenuOpen && (
+                  <ul className="submenu-list">
+                    <li>
+                      <Link
+                        to="/dashboard/students"
+                        className={`submenu-link ${location.pathname === '/dashboard/students' ? 'active' : ''}`}
+                        onClick={() => setSidebarOpen(false)}
+                      >
+                        <span className="submenu-bullet"></span>
+                        <span>Students List</span>
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
+            )}
 
-            {/* Events Parent Menu */}
+            {/* Events Parent Menu (Visible to all) */}
             <li className="nav-group">
               <div
                 className={`nav-link has-submenu ${isEventsActive ? 'active-parent' : ''}`}
@@ -157,7 +174,7 @@ const DashboardLayout = () => {
                       onClick={() => setSidebarOpen(false)}
                     >
                       <ClipboardList size={15} style={{ color: 'var(--primary-color)' }} />
-                      <span>Registrations</span>
+                      <span>Registrations & Payments</span>
                     </Link>
                   </li>
                 </ul>

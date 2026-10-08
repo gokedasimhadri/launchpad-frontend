@@ -29,7 +29,7 @@ const OrientationForm = () => {
 
   React.useEffect(() => {
     const fetchStudentData = async () => {
-      if (formData.rNo.length >= 10) {
+      if (formData.rNo.trim().length >= 2) {
         setIsLoading(true);
         setDuplicateError('');
         try {
@@ -267,7 +267,6 @@ const OrientationForm = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      readOnly
                     />
                   </div>
                 </div>
@@ -290,7 +289,6 @@ const OrientationForm = () => {
                       value={formData.branch}
                       onChange={handleChange}
                       required
-                      readOnly
                     />
                   </div>
                 </div>
@@ -309,7 +307,6 @@ const OrientationForm = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       required
-                      readOnly
                     />
                   </div>
                 </div>

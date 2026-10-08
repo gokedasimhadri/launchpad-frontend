@@ -47,6 +47,15 @@
   color: var(--primary-color) !important;
 }
 
+.input-with-icon input,
+.input-with-icon select,
+.orientation-form input,
+.orientation-form select,
+.form-group input,
+.form-group select {
+  text-align: left !important;
+}
+
 .input-with-icon select {
   width: 100%;
   flex: 1;
@@ -63,6 +72,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-sizing: border-box;
+  text-align: left !important;
 }
 
 [data-theme="dark"] .input-with-icon select {

@@ -88,6 +88,7 @@ const ClubEventPaymentPage = () => {
               eventName: data.event.name,
               amount: data.amount || paymentInfo.amount || data.registration.amountPaid || 0,
               studentName: data.registration.name,
+              email: data.registration.email,
               rNo: data.registration.rNo,
               branch: data.registration.branch,
               gender: data.registration.gender,
@@ -187,6 +188,7 @@ const ClubEventPaymentPage = () => {
                 eventName: event.name,
                 amount: eventFee,
                 studentName: registration.name,
+                email: registration.email,
                 rNo: registration.rNo,
                 branch: registration.branch,
                 gender: registration.gender,
@@ -214,6 +216,7 @@ const ClubEventPaymentPage = () => {
               eventName: event.name,
               amount: eventFee,
               studentName: registration.name,
+              email: registration.email,
               rNo: registration.rNo,
               branch: registration.branch,
               gender: registration.gender,
@@ -387,6 +390,12 @@ const ClubEventPaymentPage = () => {
               <span className="receipt-key">Student Name</span>
               <span className="receipt-val">{paymentSuccessData.studentName}</span>
             </div>
+            {paymentSuccessData.email && (
+              <div className="receipt-item">
+                <span className="receipt-key">Email</span>
+                <span className="receipt-val">{paymentSuccessData.email}</span>
+              </div>
+            )}
             <div className="receipt-item">
               <span className="receipt-key">Branch</span>
               <span className="receipt-val">{paymentSuccessData.branch}</span>
@@ -491,6 +500,13 @@ const ClubEventPaymentPage = () => {
                   <span className="entry-label">Name</span>
                   <span className="entry-value">{registration.name}</span>
                 </div>
+
+                {registration.email && (
+                  <div className="detail-entry">
+                    <span className="entry-label">Email</span>
+                    <span className="entry-value">{registration.email}</span>
+                  </div>
+                )}
 
                 <div className="detail-entry">
                   <span className="entry-label">Branch</span>
