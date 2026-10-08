@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Filter, Search, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Download, Filter, Search, Calendar, Users, Sparkles } from 'lucide-react';
 import './Students.css';
 
 const Students = () => {
@@ -116,10 +117,12 @@ const Students = () => {
           <h1>Students List</h1>
           <p>View and manage orientation attendance</p>
         </div>
-        <button className="download-btn" onClick={handleDownload} disabled={filteredStudents.length === 0}>
-          <Download size={18} />
-          <span>Export CSV</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button className="download-btn" onClick={handleDownload} disabled={filteredStudents.length === 0}>
+            <Download size={18} />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
 
       <div className="controls-bar glass-card">

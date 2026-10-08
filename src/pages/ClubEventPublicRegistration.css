@@ -1,0 +1,241 @@
+/* Public Club Event Registration Styling */
+@import '../components/OrientationForm.css';
+
+.club-event-public-wrapper {
+  position: relative;
+  width: 100%;
+  padding: 2.5rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  transition: background-color 0.3s ease;
+}
+
+.public-theme-toggle {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 25;
+}
+
+.club-event-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 1.5rem 2.5rem 2.5rem 2.5rem;
+  width: 100%;
+  max-width: 680px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.readonly-input {
+  background: var(--bg-input) !important;
+  color: var(--text-main) !important;
+  cursor: default !important;
+  font-weight: 600;
+  border-color: var(--border-color);
+}
+
+.highlight-event-name {
+  font-size: 1.05rem !important;
+  letter-spacing: 0.3px;
+  color: var(--primary-color) !important;
+}
+
+.input-with-icon select {
+  width: 100%;
+  flex: 1;
+  height: 48px;
+  padding: 0 0.85rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .input-with-icon select {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.input-with-icon select:focus {
+  border-color: var(--primary-color);
+  background: var(--bg-card);
+}
+
+.input-with-icon select option {
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+[data-theme="dark"] .input-with-icon select option {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+
+
+.event-meta-badge-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 0.85rem 1.25rem;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.event-fee-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.event-fee-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+.event-reg-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.event-reg-status-pill.open {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.event-reg-status-pill.closed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.event-closed-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 0.9rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.registration-success-card {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-check-wrapper {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  animation: popSuccess 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popSuccess {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-receipt-box {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+.receipt-row:last-child {
+  border-bottom: none;
+}
+
+.receipt-label {
+  color: var(--text-muted);
+}
+
+.receipt-val {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.event-not-found-container {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.event-not-found-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .club-event-card {
+    padding: 1.25rem;
+  }
+}

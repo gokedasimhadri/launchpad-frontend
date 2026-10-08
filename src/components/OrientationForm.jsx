@@ -47,28 +47,56 @@ const OrientationForm = () => {
             }
           }
 
-          // Fetch from student API
-          let studentApiUrl = import.meta.env.VITE_STUDENT_API_URL;
+          let student = null;
 
-          // Strip the domain so the local Vite proxy can intercept and avoid CORS
-          if (studentApiUrl && studentApiUrl.includes('https://info.aec.edu.in')) {
-            studentApiUrl = studentApiUrl.replace('https://info.aec.edu.in', '');
+          // Try 1: Fetch via backend proxy endpoint
+          try {
+            const backendRes = await fetch(`${ourBackendUrl}/api/student/${rNoUpper}`);
+            if (backendRes.ok) {
+              const bData = await backendRes.json();
+              if (Array.isArray(bData) && bData.length > 0) {
+                student = bData[0];
+              } else if (bData && !Array.isArray(bData) && (bData.studentname || bData.name)) {
+                student = bData;
+              }
+            }
+          } catch (bErr) {
+            console.warn('Backend student proxy error:', bErr);
           }
 
-          const response = await fetch(`${studentApiUrl}/${rNoUpper}`);
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.length > 0) {
-              const student = data[0];
-              setFormData(prev => ({
-                ...prev,
-                rNo: rNoUpper,
-                name: student.studentname || student.name || prev.name,
-                branch: student.branch || student.program || prev.branch,
-                phone: student.mobilenumber || student.mobile || prev.phone
-              }));
+          // Try 2: If not resolved yet, fetch via direct/proxied API with X-API-Key
+          if (!student) {
+            let studentApiUrl = import.meta.env.VITE_STUDENT_API_URL || 'https://info.aec.edu.in/adityaapi/api/studentdata';
+            if (studentApiUrl && studentApiUrl.includes('https://info.aec.edu.in')) {
+              studentApiUrl = studentApiUrl.replace('https://info.aec.edu.in', '');
             }
+
+            const apiKey = import.meta.env.VITE_STUDENT_API_KEY || '';
+            const headers = {};
+            if (apiKey) {
+              headers['X-API-Key'] = apiKey;
+            }
+
+            const response = await fetch(`${studentApiUrl}/${rNoUpper}`, { headers });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data) && data.length > 0) {
+                student = data[0];
+              } else if (data && !Array.isArray(data) && (data.studentname || data.name)) {
+                student = data;
+              }
+            }
+          }
+
+          if (student) {
+            setFormData(prev => ({
+              ...prev,
+              rNo: rNoUpper,
+              name: student.studentname || student.name || prev.name,
+              branch: student.branch || student.program || prev.branch,
+              phone: student.mobilenumber || student.mobile || student.phonenumber || student.phone || prev.phone
+            }));
           }
         } catch (err) {
           console.error('Auto-populate error:', err);
