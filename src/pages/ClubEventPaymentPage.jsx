@@ -59,6 +59,23 @@ const ClubEventPaymentPage = () => {
     }
   }, []);
 
+  // Prevent browser refresh or page close while payment is processing/verifying
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isProcessingPayment || isVerifyingPayment) {
+        const msg = 'Payment verification in progress! Please do not refresh or close this page until completed.';
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isProcessingPayment, isVerifyingPayment]);
+
   // Fetch Event and Registration Details
   useEffect(() => {
     const fetchRegistrationDetails = async () => {
@@ -434,19 +451,13 @@ const ClubEventPaymentPage = () => {
             </div>
           </div>
 
-          <div className="receipt-actions">
+          <div className="receipt-actions" style={{ justifyContent: 'center' }}>
             <button
               onClick={() => window.print()}
               className="print-btn"
             >
               <Printer size={16} />
               <span>Print Receipt</span>
-            </button>
-            <button
-              onClick={() => navigate(`/event/${slug}`)}
-              className="secondary-outline-btn"
-            >
-              <span>Register Another Student</span>
             </button>
           </div>
         </div>
@@ -606,6 +617,45 @@ const ClubEventPaymentPage = () => {
               <div className="payment-footnote">
                 <Lock size={12} />
                 <span>Payments are verified and recorded immediately.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL-SCREEN PAYMENT PROCESSING & VERIFICATION OVERLAY */}
+      {(isProcessingPayment || isVerifyingPayment) && (
+        <div className="payment-loading-overlay">
+          <div className="payment-loading-card glass-card">
+            <div className="payment-loader-container">
+              <div className="payment-pulse-ring"></div>
+              <div className="payment-main-spinner"></div>
+              <ShieldCheck size={36} className="payment-center-icon" />
+            </div>
+
+            <h3 className="overlay-heading">
+              {isVerifyingPayment ? 'Verifying Payment & Confirmation...' : 'Payment Gateway Initializing...'}
+            </h3>
+
+            <div className="warning-banner-box">
+              <AlertCircle size={24} className="banner-warning-icon" />
+              <div className="banner-text-content">
+                <strong>Please DO NOT Refresh or Close this Page!</strong>
+                <p>Payment verification is in progress. Please wait until your payment receipt is generated.</p>
+                <p style={{ marginTop: '0.4rem', fontSize: '0.84rem', color: '#f59e0b', fontWeight: 600, lineHeight: 1.4 }}>
+                  పేమెంట్ సక్సెస్ అయ్యే వరకు దయచేసి ఈ పేజీని రిఫ్రెష్ కానీ క్లోజ్ కానీ చేయకండి.
+                </p>
+              </div>
+            </div>
+
+            <div className="overlay-steps-status">
+              <div className="status-step-line">
+                <span className="step-dot active"></span>
+                <span>Connecting to Secure Payment Gateway</span>
+              </div>
+              <div className="status-step-line">
+                <span className={`step-dot ${isVerifyingPayment ? 'active' : ''}`}></span>
+                <span>{isVerifyingPayment ? 'Verifying with Bank & Recording Registration...' : 'Waiting for Payment Completion...'}</span>
               </div>
             </div>
           </div>

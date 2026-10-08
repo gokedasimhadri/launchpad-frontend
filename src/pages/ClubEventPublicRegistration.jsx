@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Droplet,
   Users,
-  Mail
+  Mail,
+  Printer
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -451,7 +452,7 @@ const ClubEventPublicRegistration = () => {
             <div className="receipt-row">
               <span className="receipt-label">Amount Paid:</span>
               <span className="receipt-val" style={{ color: 'var(--primary-color)', fontWeight: '700' }}>
-                ₹0 (Free)
+                ₹0
               </span>
             </div>
             <div className="receipt-row">
@@ -462,21 +463,11 @@ const ClubEventPublicRegistration = () => {
 
           <button
             className="welcome-ok-btn"
-            onClick={() => {
-              setRegistrationSuccess(null);
-              setFormData({
-                rNo: '',
-                name: '',
-                email: '',
-                branch: '',
-                phone: '',
-                gender: '',
-                bloodgroup: '',
-              });
-            }}
-            style={{ minWidth: 200 }}
+            onClick={() => window.print()}
+            style={{ minWidth: 200, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
-            Register Another Student
+            <Printer size={16} />
+            <span>Print Receipt</span>
           </button>
         </div>
       ) : (

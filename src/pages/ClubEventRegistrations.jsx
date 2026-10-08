@@ -461,7 +461,6 @@ const ClubEventRegistrations = () => {
             <option value="all">All Statuses</option>
             <option value="paid">Paid</option>
             <option value="pending">Pending Payment</option>
-            <option value="free">Free</option>
           </select>
         </div>
 
@@ -588,11 +587,11 @@ const ClubEventRegistrations = () => {
                           )}
                         </td>
                         <td className="amount-cell">
-                          {reg.amountPaid && Number(reg.amountPaid) > 0 ? (
-                            <span className="amount-val">₹{Math.floor(Number(reg.amountPaid))}</span>
-                          ) : (
-                            <span className="amount-free">Free</span>
-                          )}
+                          <span className="amount-val">
+                            {reg.amountPaid && Number(reg.amountPaid) > 0
+                              ? `₹${Math.floor(Number(reg.amountPaid))}`
+                              : '0'}
+                          </span>
                         </td>
                         <td className="status-cell">
                           <span className={`status-pill ${reg.paymentStatus || 'free'}`}>

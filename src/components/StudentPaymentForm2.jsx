@@ -57,6 +57,23 @@ const StudentPaymentForm2 = () => {
     fetchConfig();
   }, []);
 
+  // Prevent reload / tab close while payment is processing or verifying
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isProcessing || isVerifying) {
+        const msg = 'Payment is in progress! Please do not refresh or close this page until verification finishes.';
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isProcessing, isVerifying]);
+
   const handleDirectPayment = async () => {
     setIsProcessingPayment(true);
 
