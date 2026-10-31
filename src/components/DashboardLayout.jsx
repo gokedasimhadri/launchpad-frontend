@@ -13,7 +13,20 @@ const DashboardLayout = () => {
   const [eventsMenuOpen, setEventsMenuOpen] = useState(true);
   const { theme } = useTheme();
 
-  const userRole = localStorage.getItem('userRole') || 'admin';
+  // Check if logged-in user is Dean
+  const getIsDean = () => {
+    const role = (localStorage.getItem('userRole') || '').toLowerCase();
+    let account = null;
+    try {
+      account = JSON.parse(localStorage.getItem('userAccount') || '{}');
+    } catch {
+      account = {};
+    }
+    const username = (account?.username || '').toLowerCase();
+    return role === 'dean' || username === 'dean';
+  };
+
+  const isDean = getIsDean();
 
   useEffect(() => {
     // Keep students menu open if visiting a student route
@@ -38,14 +51,17 @@ const DashboardLayout = () => {
       return;
     }
 
-    // Role-based route guard for club managers
-    const role = localStorage.getItem('userRole');
-    if (role === 'club_manager') {
-      if (location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/students')) {
+    // Role-based route guard: Non-dean users can ONLY access the Events module
+    if (!isDean) {
+      if (
+        location.pathname === '/dashboard' ||
+        location.pathname === '/dashboard/' ||
+        location.pathname.startsWith('/dashboard/students')
+      ) {
         navigate('/dashboard/events/club-events', { replace: true });
       }
     }
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, isDean]);
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -91,8 +107,8 @@ const DashboardLayout = () => {
 
         <nav className="sidebar-nav">
           <ul>
-            {/* Dashboard (Admin Only) */}
-            {userRole !== 'club_manager' && (
+            {/* Dashboard (Dean Only) */}
+            {isDean && (
               <li>
                 <Link
                   to="/dashboard"
@@ -105,8 +121,8 @@ const DashboardLayout = () => {
               </li>
             )}
 
-            {/* Students Dropdown Group (Admin Only) */}
-            {userRole !== 'club_manager' && (
+            {/* Students Dropdown Group (Dean Only) */}
+            {isDean && (
               <li className="nav-group">
                 <div
                   className={`nav-link has-submenu ${isStudentsActive ? 'active-parent' : ''}`}

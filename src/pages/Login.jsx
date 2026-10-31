@@ -34,14 +34,17 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userRole', data.role || 'admin');
-        localStorage.setItem('userAccount', JSON.stringify(data));
+        const isDean = data.role === 'dean' || (data.username && data.username.toLowerCase() === 'dean');
+        const roleToSave = isDean ? 'dean' : (data.role || 'club_manager');
 
-        if (data.role === 'club_manager') {
-          navigate('/dashboard/events/club-events');
-        } else {
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userRole', roleToSave);
+        localStorage.setItem('userAccount', JSON.stringify({ ...data, role: roleToSave }));
+
+        if (isDean) {
           navigate('/dashboard');
+        } else {
+          navigate('/dashboard/events/club-events');
         }
       } else {
         setError(data.message || 'Invalid credentials');
