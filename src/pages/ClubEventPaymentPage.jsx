@@ -19,7 +19,8 @@ import {
   Sparkles,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  Download
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -104,6 +105,9 @@ const ClubEventPaymentPage = () => {
             setPaymentSuccessData({
               eventName: data.event.name,
               amount: data.amount || paymentInfo.amount || data.registration.amountPaid || 0,
+              teamName: data.registration.teamName || '',
+              teamType: data.registration.teamType || 'per_head',
+              teamMembers: data.registration.teamMembers || [],
               studentName: data.registration.name,
               email: data.registration.email,
               rNo: data.registration.rNo,
@@ -204,6 +208,9 @@ const ClubEventPaymentPage = () => {
               setPaymentSuccessData({
                 eventName: event.name,
                 amount: eventFee,
+                teamName: registration.teamName || '',
+                teamType: registration.teamType || 'per_head',
+                teamMembers: registration.teamMembers || [],
                 studentName: registration.name,
                 email: registration.email,
                 rNo: registration.rNo,
@@ -232,6 +239,9 @@ const ClubEventPaymentPage = () => {
             setPaymentSuccessData({
               eventName: event.name,
               amount: eventFee,
+              teamName: registration.teamName || '',
+              teamType: registration.teamType || 'per_head',
+              teamMembers: registration.teamMembers || [],
               studentName: registration.name,
               email: registration.email,
               rNo: registration.rNo,
@@ -284,7 +294,11 @@ const ClubEventPaymentPage = () => {
           setPaymentSuccessData({
             eventName: event.name,
             amount: eventFee,
+            teamName: registration.teamName || '',
+            teamType: registration.teamType || 'per_head',
+            teamMembers: registration.teamMembers || [],
             studentName: registration.name,
+            email: registration.email,
             rNo: registration.rNo,
             branch: registration.branch,
             gender: registration.gender,
@@ -311,6 +325,17 @@ const ClubEventPaymentPage = () => {
       setCopiedRoll(true);
       setTimeout(() => setCopiedRoll(false), 2000);
     }
+  };
+
+  const handleDownloadPDF = () => {
+    const oldTitle = document.title;
+    const cleanEvent = (paymentSuccessData?.eventName || event?.name || 'Event').replace(/[^a-zA-Z0-9]/g, '_');
+    const roll = paymentSuccessData?.rNo || registration?.rNo || 'Receipt';
+    document.title = `Receipt_${cleanEvent}_${roll}`;
+    window.print();
+    setTimeout(() => {
+      document.title = oldTitle;
+    }, 1200);
   };
 
   // Loading Screen
@@ -377,6 +402,16 @@ const ClubEventPaymentPage = () => {
       {/* SUCCESS / RECEIPT VIEW */}
       {paymentSuccessData ? (
         <div className="payment-card glass-card receipt-card">
+          {/* TOP RIGHT DOWNLOAD PDF OPTION */}
+          <button
+            onClick={handleDownloadPDF}
+            className="receipt-download-pdf-btn"
+            title="Download Receipt as PDF"
+          >
+            <Download size={14} />
+            <span>Download PDF</span>
+          </button>
+
           <div className="receipt-success-badge">
             <CheckCircle2 size={44} />
           </div>
@@ -399,12 +434,22 @@ const ClubEventPaymentPage = () => {
               <span className="receipt-key">Event Name</span>
               <span className="receipt-val">{paymentSuccessData.eventName}</span>
             </div>
+            {paymentSuccessData.teamType === 'per_team' && (
+              <div className="receipt-item">
+                <span className="receipt-key">Team Size</span>
+                <span className="receipt-val">{paymentSuccessData.teamMembers?.length} Persons</span>
+              </div>
+            )}
             <div className="receipt-item">
-              <span className="receipt-key">Roll Number</span>
+              <span className="receipt-key">
+                {paymentSuccessData.teamType === 'per_team' ? 'Team Leader Roll' : 'Roll Number'}
+              </span>
               <span className="receipt-val roll-badge-val">{paymentSuccessData.rNo}</span>
             </div>
             <div className="receipt-item">
-              <span className="receipt-key">Student Name</span>
+              <span className="receipt-key">
+                {paymentSuccessData.teamType === 'per_team' ? 'Team Leader Name' : 'Student Name'}
+              </span>
               <span className="receipt-val">{paymentSuccessData.studentName}</span>
             </div>
             {paymentSuccessData.email && (
@@ -435,6 +480,23 @@ const ClubEventPaymentPage = () => {
                 <span className="receipt-val">{paymentSuccessData.phone}</span>
               </div>
             )}
+            {paymentSuccessData.teamType === 'per_team' && paymentSuccessData.teamMembers && paymentSuccessData.teamMembers.length > 0 && (
+              <div style={{ margin: '0.75rem 0', padding: '0.75rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '10px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-main, #334155)', display: 'block', marginBottom: '0.5rem' }}>
+                  👥 Team Members ({paymentSuccessData.teamMembers.length})
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.8rem' }}>
+                  {paymentSuccessData.teamMembers.map((m, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', borderBottom: idx < paymentSuccessData.teamMembers.length - 1 ? '1px dashed #e2e8f0' : 'none' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-main, #0f172a)' }}>
+                        {idx + 1}. {m.name} ({m.rNo}) {idx === 0 ? '👑 Leader' : ''}
+                      </span>
+                      <span style={{ color: '#64748b', fontSize: '0.75rem' }}>{m.branch || ''}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="receipt-item">
               <span className="receipt-key">Payment ID</span>
               <span className="receipt-val monospace-val">{paymentSuccessData.paymentId}</span>
@@ -453,11 +515,19 @@ const ClubEventPaymentPage = () => {
 
           <div className="receipt-actions" style={{ justifyContent: 'center' }}>
             <button
-              onClick={() => window.print()}
+              onClick={handleDownloadPDF}
               className="print-btn"
             >
+              <Download size={16} />
+              <span>Download PDF</span>
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="secondary-outline-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.8rem 1.2rem', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: '600' }}
+            >
               <Printer size={16} />
-              <span>Print Receipt</span>
+              <span>Print</span>
             </button>
           </div>
         </div>
@@ -485,16 +555,27 @@ const ClubEventPaymentPage = () => {
           </div>
 
           <div className="checkout-content-grid">
-            {/* STUDENT DETAILS CARD */}
+            {/* STUDENT / TEAM DETAILS CARD */}
             <div className="details-panel glass-panel">
               <div className="panel-title">
-                <IdCard size={18} />
-                <span>Registered Student Details</span>
+                {registration.teamType === 'per_team' ? <Users size={18} /> : <IdCard size={18} />}
+                <span>{registration.teamType === 'per_team' ? 'Registered Team & Leader' : 'Registered Student Details'}</span>
               </div>
 
               <div className="details-list">
+                {registration.teamType === 'per_team' && (
+                  <div className="detail-entry">
+                    <span className="entry-label">Team Size</span>
+                    <span className="entry-value">
+                      {registration.teamMembers?.length || registration.teamSize} Members
+                    </span>
+                  </div>
+                )}
+
                 <div className="detail-entry">
-                  <span className="entry-label">Roll Number</span>
+                  <span className="entry-label">
+                    {registration.teamType === 'per_team' ? 'Team Leader Roll' : 'Roll Number'}
+                  </span>
                   <div className="entry-value-with-copy">
                     <span className="roll-highlight">{registration.rNo}</span>
                     <button
@@ -508,7 +589,9 @@ const ClubEventPaymentPage = () => {
                 </div>
 
                 <div className="detail-entry">
-                  <span className="entry-label">Name</span>
+                  <span className="entry-label">
+                    {registration.teamType === 'per_team' ? 'Team Leader Name' : 'Name'}
+                  </span>
                   <span className="entry-value">{registration.name}</span>
                 </div>
 
@@ -542,6 +625,24 @@ const ClubEventPaymentPage = () => {
                   <div className="detail-entry">
                     <span className="entry-label">Blood Group</span>
                     <span className="entry-value">{registration.bloodgroup}</span>
+                  </div>
+                )}
+
+                {registration.teamType === 'per_team' && registration.teamMembers && registration.teamMembers.length > 0 && (
+                  <div style={{ marginTop: '0.5rem', padding: '0.65rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main, #334155)', display: 'block', marginBottom: '0.4rem' }}>
+                      👥 Team Members ({registration.teamMembers.length})
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.78rem' }}>
+                      {registration.teamMembers.map((m, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.2rem 0', borderBottom: idx < registration.teamMembers.length - 1 ? '1px dashed #e2e8f0' : 'none' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-main, #0f172a)' }}>
+                            {idx + 1}. {m.name} ({m.rNo}) {idx === 0 ? '👑 Leader' : ''}
+                          </span>
+                          <span style={{ color: '#64748b', fontSize: '0.72rem' }}>{m.branch || ''}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

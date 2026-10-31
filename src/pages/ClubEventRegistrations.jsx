@@ -44,6 +44,7 @@ const ClubEventRegistrations = () => {
 
   // Detail Modal
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedTeamRecord, setSelectedTeamRecord] = useState(null);
 
   // Copy feedback
   const [copiedId, setCopiedId] = useState(null);
@@ -247,47 +248,140 @@ const ClubEventRegistrations = () => {
     }
   };
 
-  // CSV Export
+  // CSV Export with all team members in a single row
   const handleExportCSV = () => {
     if (registrations.length === 0) return;
 
+    // Find the max team members count across the registrations to create columns
+    const maxTeamMembers = Math.max(
+      1,
+      ...registrations.map(r => (r.teamMembers && r.teamMembers.length) || (r.teamSize || 1))
+    );
+
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    // Build headers with leader details
     const headers = [
       'S.No',
-      'Roll Number',
-      'Student Name',
-      'Email',
+      'Roll Number (Leader)',
+      'Student Name (Leader)',
+      'Team Type',
+      'Total Team Members',
       'Event Name',
-      'Branch',
-      'Gender',
-      'Blood Group',
-      'Phone Number',
+      'Branch (Leader)',
+      'Gender (Leader)',
+      'Blood Group (Leader)',
+      'Phone Number (Leader)',
+      'Email (Leader)'
+    ];
+
+    // Additional columns for Member 2, Member 3, etc.
+    for (let i = 2; i <= maxTeamMembers; i++) {
+      headers.push(
+        `Member ${i} Roll No`,
+        `Member ${i} Name`,
+        `Member ${i} Branch`,
+        `Member ${i} Gender`,
+        `Member ${i} Blood Group`,
+        `Member ${i} Phone`,
+        `Member ${i} Email`
+      );
+    }
+
+    // Payment and transaction headers
+    headers.push(
       'Amount Paid (INR)',
       'Payment Status',
       'Transaction ID',
       'Razorpay Payment ID',
       'Razorpay Order ID',
-      'Registered Date'
-    ];
+      'Registered Date',
+      'All Team Members (Summary)'
+    );
 
-    const rows = registrations.map((r, index) => [
-      index + 1,
-      r.rNo || '',
-      `"${(r.name || '').replace(/"/g, '""')}"`,
-      `"${(r.email || '').replace(/"/g, '""')}"`,
-      `"${(r.eventName || '').replace(/"/g, '""')}"`,
-      r.branch || '',
-      r.gender || '',
-      r.bloodgroup || '',
-      r.phone || '',
-      Math.floor(r.amountPaid !== undefined ? r.amountPaid : 0),
-      r.paymentStatus || '',
-      `"${(r.transactionId || r.razorpayPaymentId || '').replace(/"/g, '""')}"`,
-      `"${(r.razorpayPaymentId || '').replace(/"/g, '""')}"`,
-      `"${(r.razorpayOrderId || '').replace(/"/g, '""')}"`,
-      formatDate(r.createdAt)
-    ]);
+    const rows = registrations.map((r, index) => {
+      // Normalize team members list
+      const membersList = (r.teamMembers && r.teamMembers.length > 0)
+        ? r.teamMembers
+        : [{
+            rNo: r.rNo,
+            name: r.name,
+            branch: r.branch,
+            gender: r.gender,
+            bloodgroup: r.bloodgroup,
+            phone: r.phone,
+            email: r.email,
+            isLeader: true
+          }];
 
-    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+      const leader = membersList[0] || {};
+
+      const row = [
+        index + 1,
+        escapeCSV(leader.rNo || r.rNo || ''),
+        escapeCSV(leader.name || r.name || ''),
+        escapeCSV(r.teamType === 'per_team' ? 'Per Team' : 'Individual'),
+        membersList.length || r.teamSize || 1,
+        escapeCSV(r.eventName || ''),
+        escapeCSV(leader.branch || r.branch || ''),
+        escapeCSV(leader.gender || r.gender || ''),
+        escapeCSV(leader.bloodgroup || r.bloodgroup || ''),
+        escapeCSV(leader.phone || r.phone || ''),
+        escapeCSV(leader.email || r.email || '')
+      ];
+
+      // Columns for Member 2 to maxTeamMembers
+      for (let i = 1; i < maxTeamMembers; i++) {
+        const m = membersList[i];
+        if (m) {
+          row.push(
+            escapeCSV(m.rNo || ''),
+            escapeCSV(m.name || ''),
+            escapeCSV(m.branch || ''),
+            escapeCSV(m.gender || ''),
+            escapeCSV(m.bloodgroup || ''),
+            escapeCSV(m.phone || ''),
+            escapeCSV(m.email || '')
+          );
+        } else {
+          row.push('""', '""', '""', '""', '""', '""', '""');
+        }
+      }
+
+      // Combined summary of all members in one cell for convenience
+      const summaryText = membersList.map((m, idx) => {
+        const role = idx === 0 ? 'Leader' : `Member ${idx + 1}`;
+        const parts = [
+          m.name || 'Unnamed',
+          m.rNo ? `Roll: ${m.rNo}` : '',
+          m.branch ? `Branch: ${m.branch}` : '',
+          m.phone ? `Phone: ${m.phone}` : '',
+          m.gender ? `Gender: ${m.gender}` : '',
+          m.bloodgroup ? `Blood: ${m.bloodgroup}` : '',
+          m.email ? `Email: ${m.email}` : ''
+        ].filter(Boolean);
+        return `[${role}] ${parts.join(', ')}`;
+      }).join(' | ');
+
+      row.push(
+        Math.floor(r.amountPaid !== undefined ? r.amountPaid : 0),
+        escapeCSV((r.paymentStatus || '').toUpperCase()),
+        escapeCSV(r.transactionId || r.razorpayPaymentId || ''),
+        escapeCSV(r.razorpayPaymentId || ''),
+        escapeCSV(r.razorpayOrderId || ''),
+        escapeCSV(formatDate(r.createdAt)),
+        escapeCSV(summaryText)
+      );
+
+      return row.join(',');
+    });
+
+    // Prefix UTF-8 BOM so Microsoft Excel correctly reads special characters and UTF-8 formatting
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -297,7 +391,7 @@ const ClubEventRegistrations = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    showToast(`Exported ${registrations.length} registrations to CSV`);
+    showToast(`Exported ${registrations.length} registrations with team members in single row to Excel CSV`);
   };
 
   return (
@@ -527,7 +621,7 @@ const ClubEventRegistrations = () => {
                   <tr>
                     <th>S.NO</th>
                     <th>ROLL NO</th>
-                    <th>STUDENT NAME</th>
+                    <th>STUDENT / TEAM</th>
                     <th>EVENT NAME</th>
                     <th>BRANCH</th>
                     <th>GENDER</th>
@@ -563,6 +657,19 @@ const ClubEventRegistrations = () => {
                         </td>
                         <td className="name-cell">
                           <span className="student-name">{reg.name}</span>
+                          {reg.teamType === 'per_team' && (
+                            <div style={{ marginTop: '4px' }}>
+                              <button
+                                type="button"
+                                className="team-count-clickable-badge"
+                                onClick={() => setSelectedTeamRecord(reg)}
+                                title="Click to view all team members data"
+                              >
+                                <Users size={12} />
+                                <span>Team ({reg.teamMembers?.length || reg.teamSize || 1} members)</span>
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td className="event-cell">
                           <span className="event-name-tag" title={reg.eventName}>
@@ -746,12 +853,78 @@ const ClubEventRegistrations = () => {
                     <span className="label">Event Slug</span>
                     <span className="value code-val">/event/{selectedRecord.eventSlug}</span>
                   </div>
+                  <div className="detail-item">
+                    <span className="label">Team Type</span>
+                    <span className="value strong">
+                      {selectedRecord.teamType === 'per_team' ? 'Per Team' : 'Per Head (Individual)'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
+              {/* Team Information Section (If Per Team) */}
+              {selectedRecord.teamType === 'per_team' && (
+                <div className="modal-section" style={{ background: 'rgba(99, 102, 241, 0.04)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#4f46e5' }}>
+                      <Users size={18} /> Team Information
+                    </h3>
+                    <span style={{
+                      background: 'rgba(99, 102, 241, 0.15)',
+                      color: '#4f46e5',
+                      padding: '3px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700
+                    }}>
+                      {selectedRecord.teamMembers?.length || selectedRecord.teamSize || 1} Persons
+                    </span>
+                  </div>
+                  <div className="modal-grid" style={{ marginBottom: '0.75rem' }}>
+                    <div className="detail-item">
+                      <span className="label">Total Members</span>
+                      <span className="value strong">
+                        {selectedRecord.teamMembers?.length || selectedRecord.teamSize || 1} Persons
+                      </span>
+                    </div>
+                  </div>
+
+                  {selectedRecord.teamMembers && selectedRecord.teamMembers.length > 0 && (
+                    <div style={{ marginTop: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>
+                            <th style={{ padding: '7px 10px' }}>#</th>
+                            <th style={{ padding: '7px 10px' }}>Roll No</th>
+                            <th style={{ padding: '7px 10px' }}>Name</th>
+                            <th style={{ padding: '7px 10px' }}>Branch</th>
+                            <th style={{ padding: '7px 10px' }}>Phone</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedRecord.teamMembers.map((m, idx) => (
+                            <tr key={idx} style={{ borderBottom: idx < selectedRecord.teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                              <td style={{ padding: '7px 10px', color: '#64748b' }}>
+                                {idx === 0 ? '👑 1' : idx + 1}
+                              </td>
+                              <td style={{ padding: '7px 10px', fontWeight: 600 }}>{m.rNo}</td>
+                              <td style={{ padding: '7px 10px' }}>
+                                {m.name} {idx === 0 && <span style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 700 }}>(Leader)</span>}
+                              </td>
+                              <td style={{ padding: '7px 10px', color: '#64748b' }}>{m.branch || '-'}</td>
+                              <td style={{ padding: '7px 10px', color: '#64748b' }}>{m.phone || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Student Section */}
               <div className="modal-section">
-                <h3>Student Profile</h3>
+                <h3>{selectedRecord.teamType === 'per_team' ? 'Team Leader / Primary Contact' : 'Student Profile'}</h3>
                 <div className="modal-grid">
                   <div className="detail-item">
                     <span className="label">Roll Number</span>
@@ -919,6 +1092,228 @@ const ClubEventRegistrations = () => {
               <button className="modal-close-action-btn" onClick={() => setSelectedRecord(null)}>
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Members Data Popup Modal */}
+      {selectedTeamRecord && (
+        <div className="reg-modal-overlay" onClick={() => setSelectedTeamRecord(null)}>
+          <div
+            className="reg-modal team-popup-modal glass-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '820px' }}
+          >
+            <div className="reg-modal-header">
+              <div className="modal-title-wrapper">
+                <div className="modal-title-icon" style={{ background: 'rgba(37, 99, 235, 0.12)', color: '#2563eb' }}>
+                  <Users size={22} />
+                </div>
+                <div>
+                  <h2>Team Members Data</h2>
+                  <p>
+                    {selectedTeamRecord.eventName} • Leader: <strong>{selectedTeamRecord.name}</strong> ({selectedTeamRecord.rNo})
+                  </p>
+                </div>
+              </div>
+              <button
+                className="modal-close-btn"
+                onClick={() => setSelectedTeamRecord(null)}
+                title="Close Popup"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="reg-modal-body" style={{ gap: '1.25rem' }}>
+              {/* Quick Summary Pill Bar */}
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                padding: '0.85rem 1.1rem',
+                background: 'rgba(37, 99, 235, 0.05)',
+                borderRadius: '12px',
+                border: '1px solid rgba(37, 99, 235, 0.15)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Total Members:</span>
+                  <span style={{
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    padding: '2px 9px',
+                    borderRadius: '20px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700
+                  }}>
+                    {selectedTeamRecord.teamMembers?.length || selectedTeamRecord.teamSize || 1} Persons
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Payment:</span>
+                  <span className={`status-pill ${selectedTeamRecord.paymentStatus || 'free'}`}>
+                    {selectedTeamRecord.paymentStatus === 'paid' ? 'PAID' : selectedTeamRecord.paymentStatus === 'pending' ? 'PENDING' : 'FREE'}
+                  </span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem' }}>
+                    ₹{Math.floor(Number(selectedTeamRecord.amountPaid || 0))}
+                  </span>
+                </div>
+              </div>
+
+              {/* Team Members Detailed Table */}
+              <div style={{
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'var(--bg-card)'
+              }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="team-popup-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>ROLL NO</th>
+                        <th>STUDENT NAME</th>
+                        <th>BRANCH</th>
+                        <th>GENDER</th>
+                        <th>BLOOD</th>
+                        <th>PHONE</th>
+                        <th>EMAIL</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const membersList = (selectedTeamRecord.teamMembers && selectedTeamRecord.teamMembers.length > 0)
+                          ? selectedTeamRecord.teamMembers
+                          : [{
+                              rNo: selectedTeamRecord.rNo,
+                              name: selectedTeamRecord.name,
+                              branch: selectedTeamRecord.branch,
+                              gender: selectedTeamRecord.gender,
+                              bloodgroup: selectedTeamRecord.bloodgroup,
+                              phone: selectedTeamRecord.phone,
+                              email: selectedTeamRecord.email,
+                              isLeader: true
+                            }];
+
+                        return membersList.map((m, idx) => {
+                          const isLeader = idx === 0 || m.isLeader;
+                          return (
+                            <tr
+                              key={idx}
+                              style={{
+                                background: isLeader ? 'rgba(37, 99, 235, 0.03)' : 'transparent'
+                              }}
+                            >
+                              <td>
+                                {isLeader ? (
+                                  <span className="team-leader-pill">
+                                    👑 Leader
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>
+                                    {idx + 1}
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="badge-copy-btn"
+                                  onClick={() => copyToClipboard(m.rNo, `team-roll-${idx}`)}
+                                  title="Copy roll number"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                  <span className="roll-badge" style={{ fontWeight: 700 }}>{m.rNo}</span>
+                                  {copiedId === `team-roll-${idx}` ? (
+                                    <Check size={12} className="copy-success" />
+                                  ) : (
+                                    <Copy size={12} className="copy-icon" />
+                                  )}
+                                </button>
+                              </td>
+                              <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                                {m.name}
+                              </td>
+                              <td>
+                                <span className="branch-badge">{m.branch || '-'}</span>
+                              </td>
+                              <td>{m.gender || '-'}</td>
+                              <td>
+                                {m.bloodgroup ? (
+                                  <span className="blood-badge">{m.bloodgroup}</span>
+                                ) : (
+                                  '-'
+                                )}
+                              </td>
+                              <td>
+                                {m.phone ? (
+                                  <a href={`tel:${m.phone}`} className="phone-link" style={{ fontSize: '0.82rem' }}>
+                                    <Phone size={12} />
+                                    <span>{m.phone}</span>
+                                  </a>
+                                ) : (
+                                  '-'
+                                )}
+                              </td>
+                              <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                {m.email ? (
+                                  <a href={`mailto:${m.email}`} style={{ color: 'inherit', textDecoration: 'underline' }}>
+                                    {m.email}
+                                  </a>
+                                ) : (
+                                  '-'
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal Action Bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const members = selectedTeamRecord.teamMembers || [];
+                    const allRolls = members.map(m => m.rNo).filter(Boolean).join(', ');
+                    copyToClipboard(allRolls, 'all-team-rolls');
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '0.55rem 0.95rem',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--text-main)',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Copy size={14} />
+                  <span>{copiedId === 'all-team-rolls' ? 'Copied All Rolls!' : 'Copy All Roll Numbers'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="clear-filters-action-btn"
+                  onClick={() => setSelectedTeamRecord(null)}
+                  style={{ padding: '0.55rem 1.25rem', fontSize: '0.84rem' }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

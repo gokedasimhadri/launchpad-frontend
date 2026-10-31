@@ -21,7 +21,8 @@ import {
   ToggleLeft,
   ToggleRight,
   ClipboardList,
-  Lock
+  Lock,
+  User
 } from 'lucide-react';
 import './ClubEvents.css';
 
@@ -52,10 +53,12 @@ const ClubEvents = () => {
     slug_link: '',
     status: 'active',
     role: '',
-    password: ''
+    password: '',
+    teamType: 'per_head',
+    personsCount: 2
   });
 
-  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:6002';
+  const backendUrl = import.meta.env.VITE_API_URL;
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -105,7 +108,9 @@ const ClubEvents = () => {
       slug_link: '',
       status: 'active',
       role: '',
-      password: ''
+      password: '',
+      teamType: 'per_head',
+      personsCount: 2
     });
     setFormError('');
     setIsFormModalOpen(true);
@@ -121,7 +126,9 @@ const ClubEvents = () => {
       slug_link: event.slug_link || '',
       status: event.status || 'active',
       role: event.role || '',
-      password: event.password || ''
+      password: event.password || '',
+      teamType: event.teamType || 'per_head',
+      personsCount: event.personsCount || event.maxTeamSize || event.minTeamSize || 2
     });
     setFormError('');
     setIsFormModalOpen(true);
@@ -162,6 +169,14 @@ const ClubEvents = () => {
       return;
     }
 
+    if (formData.teamType === 'per_team') {
+      const count = parseInt(formData.personsCount, 10);
+      if (isNaN(count) || count < 1) {
+        setFormError('Persons count must be at least 1.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -171,13 +186,17 @@ const ClubEvents = () => {
         slug_link: cleanSlug,
         status: formData.status,
         role: formData.role ? formData.role.trim() : '',
-        password: formData.password ? formData.password.trim() : ''
+        password: formData.password ? formData.password.trim() : '',
+        teamType: formData.teamType,
+        personsCount: formData.teamType === 'per_team' ? Number(formData.personsCount) : 1,
+        minTeamSize: formData.teamType === 'per_team' ? Number(formData.personsCount) : 1,
+        maxTeamSize: formData.teamType === 'per_team' ? Number(formData.personsCount) : 1,
       };
 
       const url = editingEvent
         ? `${backendUrl}/api/club-events/${editingEvent._id}`
         : `${backendUrl}/api/club-events`;
-      
+
       const method = editingEvent ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -439,6 +458,7 @@ const ClubEvents = () => {
               <th>Club Event Name</th>
               <th>Role Username</th>
               <th>Amount</th>
+              <th>Team Type</th>
               <th>Registration</th>
               <th>Slug Link</th>
               <th>Status</th>
@@ -449,7 +469,7 @@ const ClubEvents = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '3rem' }}>
+                <td colSpan="10" style={{ textAlign: 'center', padding: '3rem' }}>
                   <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
                   <p style={{ color: 'var(--text-muted)' }}>Loading club events...</p>
                 </td>
@@ -486,6 +506,39 @@ const ClubEvents = () => {
                     <span className="amount-tag">
                       ₹{event.amount !== undefined ? event.amount : 0}
                     </span>
+                  </td>
+                  <td>
+                    {event.teamType === 'per_team' ? (
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        color: '#2563eb',
+                        padding: '0.25rem 0.65rem',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600'
+                      }}>
+                        <Users size={12} />
+                        <span>Per Team ({event.personsCount || event.maxTeamSize || event.minTeamSize || 2} Persons)</span>
+                      </span>
+                    ) : (
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#059669',
+                        padding: '0.25rem 0.65rem',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600'
+                      }}>
+                        <User size={12} />
+                        <span>Per Head</span>
+                      </span>
+                    )}
                   </td>
                   <td>
                     <button
@@ -556,7 +609,7 @@ const ClubEvents = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8">
+                <td colSpan="10">
                   <div className="empty-events-state">
                     <div className="empty-events-icon">
                       <Calendar size={32} />
@@ -641,6 +694,59 @@ const ClubEvents = () => {
                     />
                   </div>
                 </div>
+
+                {/* Team Type Dropdown */}
+                <div className="form-group">
+                  <label className="form-label">
+                    Team Type <span className="required-star">*</span>
+                  </label>
+                  <div className="form-input-group">
+                    <Users size={16} className="input-prefix-icon" />
+                    <select
+                      className="form-input has-prefix"
+                      value={formData.teamType}
+                      onChange={(e) => setFormData({ ...formData, teamType: e.target.value })}
+                      required
+                    >
+                      <option value="per_head">Per Head (Single Person)</option>
+                      <option value="per_team">Per Team</option>
+                    </select>
+                  </div>
+                  <span className="helper-text" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    {formData.teamType === 'per_head'
+                      ? 'Single person registration for this event'
+                      : 'Team participation event with multiple members'}
+                  </span>
+                </div>
+
+                {/* If Per Team: Ask for persons count for this event */}
+                {formData.teamType === 'per_team' && (
+                  <div style={{
+                    background: 'var(--background-light, rgba(0, 0, 0, 0.02))',
+                    padding: '0.85rem 1rem',
+                    borderRadius: '10px',
+                    border: '1px dashed var(--border-color, #e2e8f0)',
+                    marginBottom: '1rem'
+                  }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">
+                        Persons Count <span className="required-star">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-input"
+                        placeholder="e.g. 4"
+                        value={formData.personsCount}
+                        onChange={(e) => setFormData({ ...formData, personsCount: e.target.value })}
+                        required
+                      />
+                      <span className="helper-text" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                        Specify the number of persons for this event
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Registration (Open / Closed) */}
                 <div className="form-group">

@@ -386,6 +386,46 @@
 .receipt-card {
   text-align: center;
   max-width: 680px;
+  position: relative;
+}
+
+.receipt-download-pdf-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  background: var(--hero-banner-bg, linear-gradient(135deg, #0D233B 0%, #0b5299 100%));
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.receipt-download-pdf-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  filter: brightness(1.08);
+}
+
+.receipt-download-pdf-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .receipt-download-pdf-btn {
+    position: static;
+    margin: 0 auto 1.25rem auto;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .receipt-success-badge {
@@ -752,4 +792,59 @@
 @keyframes pulseDot {
   from { opacity: 0.5; }
   to { opacity: 1; }
+}
+
+/* Clean Print / Save to PDF Styles */
+@media print {
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .payment-theme-toggle,
+  .receipt-download-pdf-btn,
+  .receipt-actions,
+  .custom-notification {
+    display: none !important;
+  }
+
+  .club-payment-wrapper {
+    background: #ffffff !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  .payment-card.receipt-card {
+    border: 1px solid #d1d5db !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 1.5rem !important;
+  }
+
+  .receipt-details-table {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+  }
+
+  .receipt-item {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  .receipt-heading {
+    color: #111827 !important;
+  }
+
+  .receipt-val {
+    color: #111827 !important;
+  }
+
+  .amount-val {
+    color: #b45309 !important;
+  }
 }
