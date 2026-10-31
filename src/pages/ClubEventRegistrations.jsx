@@ -274,7 +274,6 @@ const ClubEventRegistrations = () => {
       'Event Name',
       'Branch (Leader)',
       'Gender (Leader)',
-      'Blood Group (Leader)',
       'Phone Number (Leader)',
       'Email (Leader)'
     ];
@@ -286,7 +285,6 @@ const ClubEventRegistrations = () => {
         `Member ${i} Name`,
         `Member ${i} Branch`,
         `Member ${i} Gender`,
-        `Member ${i} Blood Group`,
         `Member ${i} Phone`,
         `Member ${i} Email`
       );
@@ -312,7 +310,6 @@ const ClubEventRegistrations = () => {
             name: r.name,
             branch: r.branch,
             gender: r.gender,
-            bloodgroup: r.bloodgroup,
             phone: r.phone,
             email: r.email,
             isLeader: true
@@ -329,7 +326,6 @@ const ClubEventRegistrations = () => {
         escapeCSV(r.eventName || ''),
         escapeCSV(leader.branch || r.branch || ''),
         escapeCSV(leader.gender || r.gender || ''),
-        escapeCSV(leader.bloodgroup || r.bloodgroup || ''),
         escapeCSV(leader.phone || r.phone || ''),
         escapeCSV(leader.email || r.email || '')
       ];
@@ -343,12 +339,11 @@ const ClubEventRegistrations = () => {
             escapeCSV(m.name || ''),
             escapeCSV(m.branch || ''),
             escapeCSV(m.gender || ''),
-            escapeCSV(m.bloodgroup || ''),
             escapeCSV(m.phone || ''),
             escapeCSV(m.email || '')
           );
         } else {
-          row.push('""', '""', '""', '""', '""', '""', '""');
+          row.push('""', '""', '""', '""', '""', '""');
         }
       }
 
@@ -361,7 +356,6 @@ const ClubEventRegistrations = () => {
           m.branch ? `Branch: ${m.branch}` : '',
           m.phone ? `Phone: ${m.phone}` : '',
           m.gender ? `Gender: ${m.gender}` : '',
-          m.bloodgroup ? `Blood: ${m.bloodgroup}` : '',
           m.email ? `Email: ${m.email}` : ''
         ].filter(Boolean);
         return `[${role}] ${parts.join(', ')}`;
@@ -625,7 +619,6 @@ const ClubEventRegistrations = () => {
                     <th>EVENT NAME</th>
                     <th>BRANCH</th>
                     <th>GENDER</th>
-                    <th>BLOOD GROUP</th>
                     <th>PHONE</th>
                     <th>AMOUNT</th>
                     <th>STATUS</th>
@@ -680,9 +673,6 @@ const ClubEventRegistrations = () => {
                           <span className="branch-badge">{reg.branch || 'N/A'}</span>
                         </td>
                         <td className="gender-cell">{reg.gender || '-'}</td>
-                        <td className="blood-cell">
-                          <span className="blood-badge">{reg.bloodgroup || '-'}</span>
-                        </td>
                         <td className="phone-cell">
                           {reg.phone && reg.phone !== 'N/A' ? (
                             <a href={`tel:${reg.phone}`} className="phone-link">
@@ -947,10 +937,6 @@ const ClubEventRegistrations = () => {
                     <span className="value">{selectedRecord.gender || 'N/A'}</span>
                   </div>
                   <div className="detail-item">
-                    <span className="label">Blood Group</span>
-                    <span className="value blood-tag">{selectedRecord.bloodgroup || 'N/A'}</span>
-                  </div>
-                  <div className="detail-item">
                     <span className="label">Phone Number</span>
                     <span className="value">
                       {selectedRecord.phone ? (
@@ -1180,7 +1166,6 @@ const ClubEventRegistrations = () => {
                         <th>STUDENT NAME</th>
                         <th>BRANCH</th>
                         <th>GENDER</th>
-                        <th>BLOOD</th>
                         <th>PHONE</th>
                         <th>EMAIL</th>
                       </tr>
@@ -1194,7 +1179,6 @@ const ClubEventRegistrations = () => {
                               name: selectedTeamRecord.name,
                               branch: selectedTeamRecord.branch,
                               gender: selectedTeamRecord.gender,
-                              bloodgroup: selectedTeamRecord.bloodgroup,
                               phone: selectedTeamRecord.phone,
                               email: selectedTeamRecord.email,
                               isLeader: true
@@ -1243,13 +1227,6 @@ const ClubEventRegistrations = () => {
                                 <span className="branch-badge">{m.branch || '-'}</span>
                               </td>
                               <td>{m.gender || '-'}</td>
-                              <td>
-                                {m.bloodgroup ? (
-                                  <span className="blood-badge">{m.bloodgroup}</span>
-                                ) : (
-                                  '-'
-                                )}
-                              </td>
                               <td>
                                 {m.phone ? (
                                   <a href={`tel:${m.phone}`} className="phone-link" style={{ fontSize: '0.82rem' }}>

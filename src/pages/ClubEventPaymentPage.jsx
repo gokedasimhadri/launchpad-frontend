@@ -11,7 +11,6 @@ import {
   User,
   Building,
   Phone,
-  Droplet,
   Users,
   Calendar,
   Lock,
@@ -113,7 +112,6 @@ const ClubEventPaymentPage = () => {
               rNo: data.registration.rNo,
               branch: data.registration.branch,
               gender: data.registration.gender,
-              bloodgroup: data.registration.bloodgroup,
               phone: data.registration.phone,
               paymentId: paymentInfo.razorpayPaymentId || data.registration.razorpayPaymentId || 'COMPLETED',
               orderId: paymentInfo.razorpayOrderId || data.registration.razorpayOrderId || '',
@@ -216,7 +214,6 @@ const ClubEventPaymentPage = () => {
                 rNo: registration.rNo,
                 branch: registration.branch,
                 gender: registration.gender,
-                bloodgroup: registration.bloodgroup,
                 phone: registration.phone,
                 paymentId: response.razorpay_payment_id,
                 orderId: response.razorpay_order_id,
@@ -247,7 +244,6 @@ const ClubEventPaymentPage = () => {
               rNo: registration.rNo,
               branch: registration.branch,
               gender: registration.gender,
-              bloodgroup: registration.bloodgroup,
               phone: registration.phone,
               paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
               orderId: response.razorpay_order_id,
@@ -302,7 +298,6 @@ const ClubEventPaymentPage = () => {
             rNo: registration.rNo,
             branch: registration.branch,
             gender: registration.gender,
-            bloodgroup: registration.bloodgroup,
             phone: registration.phone,
             paymentId: mockPaymentId,
             orderId: orderData.orderId,
@@ -468,12 +463,6 @@ const ClubEventPaymentPage = () => {
                 <span className="receipt-val">{paymentSuccessData.gender}</span>
               </div>
             )}
-            {paymentSuccessData.bloodgroup && (
-              <div className="receipt-item">
-                <span className="receipt-key">Blood Group</span>
-                <span className="receipt-val">{paymentSuccessData.bloodgroup}</span>
-              </div>
-            )}
             {paymentSuccessData.phone && (
               <div className="receipt-item">
                 <span className="receipt-key">Phone</span>
@@ -621,12 +610,6 @@ const ClubEventPaymentPage = () => {
                   </div>
                 )}
 
-                {registration.bloodgroup && (
-                  <div className="detail-entry">
-                    <span className="entry-label">Blood Group</span>
-                    <span className="entry-value">{registration.bloodgroup}</span>
-                  </div>
-                )}
 
                 {registration.teamType === 'per_team' && registration.teamMembers && registration.teamMembers.length > 0 && (
                   <div style={{ marginTop: '0.5rem', padding: '0.65rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>

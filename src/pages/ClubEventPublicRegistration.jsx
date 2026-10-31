@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  Droplet,
   Users,
   Mail,
   Printer,
@@ -39,7 +38,6 @@ const ClubEventPublicRegistration = () => {
     branch: '',
     phone: '',
     gender: '',
-    bloodgroup: '',
   });
 
   // Team Registration Form data
@@ -67,7 +65,6 @@ const ClubEventPublicRegistration = () => {
     branch: '',
     phone: '',
     gender: '',
-    bloodgroup: '',
     isLeader: isLeader,
     isLoading: false,
     error: '',
@@ -158,7 +155,6 @@ const ClubEventPublicRegistration = () => {
 
     if (student) {
       const rawGender = student.gender && student.gender !== '-' ? student.gender : '';
-      const rawBloodGroup = student.bloodgroup && student.bloodgroup !== '-' ? student.bloodgroup : '';
       const rawPhone = student.mobilenumber || student.mobile || student.phonenumber || student.phone || '';
       const cleanPhone = rawPhone && rawPhone !== '-' ? String(rawPhone).trim() : '';
       const rawEmail = student.email || student.studentemail || student.mail || student.emailid || '';
@@ -169,8 +165,7 @@ const ClubEventPublicRegistration = () => {
         email: cleanEmail,
         branch: student.branch || student.program || '',
         phone: cleanPhone,
-        gender: rawGender,
-        bloodgroup: rawBloodGroup
+        gender: rawGender
       };
     }
 
@@ -218,7 +213,6 @@ const ClubEventPublicRegistration = () => {
                   branch: checkData.registration.branch || prev.branch,
                   phone: checkData.registration.phone || prev.phone,
                   gender: checkData.registration.gender || prev.gender,
-                  bloodgroup: checkData.registration.bloodgroup || prev.bloodgroup,
                 }));
               }
               setIsLoadingStudent(false);
@@ -237,7 +231,6 @@ const ClubEventPublicRegistration = () => {
             branch: profile.branch || prev.branch,
             phone: profile.phone || prev.phone,
             gender: profile.gender || prev.gender,
-            bloodgroup: profile.bloodgroup || prev.bloodgroup,
           }));
         }
       } catch (err) {
@@ -338,7 +331,6 @@ const ClubEventPublicRegistration = () => {
               branch: profile.branch || next[index].branch,
               phone: profile.phone || next[index].phone,
               gender: profile.gender || next[index].gender,
-              bloodgroup: profile.bloodgroup || next[index].bloodgroup,
               isLoading: false,
               error: ''
             };
@@ -461,11 +453,6 @@ const ClubEventPublicRegistration = () => {
           return;
         }
 
-        if (!m.bloodgroup?.trim()) {
-          showNotification(`Please select blood group for ${label}.`, 'error');
-          return;
-        }
-
         if (!m.phone?.trim() || m.phone.trim().length < 10) {
           showNotification(`Please enter a valid 10-digit phone number for ${label}.`, 'error');
           return;
@@ -489,7 +476,6 @@ const ClubEventPublicRegistration = () => {
           branch: m.branch.trim(),
           phone: m.phone.trim(),
           gender: m.gender.trim(),
-          bloodgroup: m.bloodgroup.trim(),
           isLeader: idx === 0
         }));
 
@@ -506,7 +492,6 @@ const ClubEventPublicRegistration = () => {
               branch: leader.branch.trim(),
               phone: leader.phone.trim(),
               gender: leader.gender.trim(),
-              bloodgroup: leader.bloodgroup.trim(),
               eventName: event.name,
               eventSlug: event.slug_link,
               eventId: event._id,
@@ -528,7 +513,6 @@ const ClubEventPublicRegistration = () => {
               rNo: leader.rNo,
               branch: leader.branch,
               gender: leader.gender,
-              bloodgroup: leader.bloodgroup,
               phone: leader.phone,
               paymentId: 'N/A (Free Event)',
               date: new Date().toLocaleDateString('en-IN', {
@@ -565,7 +549,6 @@ const ClubEventPublicRegistration = () => {
     const cleanEmail = (formData.email || '').trim();
     const cleanBranch = (formData.branch || '').trim();
     const cleanGender = (formData.gender || '').trim();
-    const cleanBloodgroup = (formData.bloodgroup || '').trim();
     const cleanPhone = (formData.phone || '').trim();
 
     if (!cleanRNo) {
@@ -591,11 +574,6 @@ const ClubEventPublicRegistration = () => {
 
     if (!cleanGender) {
       showNotification('Please select your gender.', 'error');
-      return;
-    }
-
-    if (!cleanBloodgroup) {
-      showNotification('Please select your blood group.', 'error');
       return;
     }
 
@@ -633,7 +611,6 @@ const ClubEventPublicRegistration = () => {
             rNo: formData.rNo,
             branch: formData.branch,
             gender: formData.gender,
-            bloodgroup: formData.bloodgroup,
             phone: formData.phone,
             paymentId: 'N/A (Free Event)',
             date: new Date().toLocaleDateString('en-IN', {
@@ -1135,59 +1112,28 @@ const ClubEventPublicRegistration = () => {
                       </div>
                     </div>
 
-                    {/* Row 3: Blood group & Phone number */}
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label htmlFor={`member-bloodgroup-${index}`}>
-                          Blood group <span style={{ color: '#ef4444' }}>*</span>
-                        </label>
-                        <div className="input-with-icon">
-                          <div className="field-icon-wrapper">
-                            <Droplet size={20} />
-                          </div>
-                          <select
-                            id={`member-bloodgroup-${index}`}
-                            value={member.bloodgroup}
-                            onChange={(e) => handleTeamMemberFieldChange(index, 'bloodgroup', e.target.value)}
-                            style={{ textAlign: 'left' }}
-                            required
-                          >
-                            <option value="">Select Blood Group</option>
-                            {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
-                              <option key={bg} value={bg}>{bg}</option>
-                            ))}
-                            {member.bloodgroup && !['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].includes(member.bloodgroup) && (
-                              <option value={member.bloodgroup}>{member.bloodgroup}</option>
-                            )}
-                          </select>
+                    {/* Row 3: Phone number */}
+                    <div className="form-group">
+                      <label htmlFor={`member-phone-${index}`}>
+                        Phone number <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <div className="input-with-icon">
+                        <div className="field-icon-wrapper">
+                          <Phone size={20} />
                         </div>
-                        <span className="helper-text">
-                          {member.bloodgroup ? 'Blood group selected' : 'Select blood group'}
-                        </span>
+                        <input
+                          type="tel"
+                          id={`member-phone-${index}`}
+                          placeholder="Enter phone number"
+                          value={member.phone}
+                          onChange={(e) => handleTeamMemberFieldChange(index, 'phone', e.target.value)}
+                          style={{ textAlign: 'left' }}
+                          required
+                        />
                       </div>
-
-                      <div className="form-group">
-                        <label htmlFor={`member-phone-${index}`}>
-                          Phone number <span style={{ color: '#ef4444' }}>*</span>
-                        </label>
-                        <div className="input-with-icon">
-                          <div className="field-icon-wrapper">
-                            <Phone size={20} />
-                          </div>
-                          <input
-                            type="tel"
-                            id={`member-phone-${index}`}
-                            placeholder="Enter phone number"
-                            value={member.phone}
-                            onChange={(e) => handleTeamMemberFieldChange(index, 'phone', e.target.value)}
-                            style={{ textAlign: 'left' }}
-                            required
-                          />
-                        </div>
-                        <span className="helper-text">
-                          {member.phone ? 'Phone number entered' : 'Enter phone number'}
-                        </span>
-                      </div>
+                      <span className="helper-text">
+                        {member.phone ? 'Phone number entered' : 'Enter phone number'}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -1359,59 +1305,27 @@ const ClubEventPublicRegistration = () => {
                   </div>
                 </div>
 
-                {/* Row 3: Blood group & Phone number */}
-                <div className="form-row">
-                  {/* 6. Blood group */}
-                  <div className="form-group">
-                    <label htmlFor="bloodgroup">Blood group</label>
-                    <div className="input-with-icon">
-                      <div className="field-icon-wrapper">
-                        <Droplet size={20} />
-                      </div>
-                      <select
-                        id="bloodgroup"
-                        name="bloodgroup"
-                        value={formData.bloodgroup}
-                        onChange={handleChange}
-                        style={{ textAlign: 'left' }}
-                        required
-                      >
-                        <option value="">Select Blood Group</option>
-                        {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
-                          <option key={bg} value={bg}>{bg}</option>
-                        ))}
-                        {formData.bloodgroup && !['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].includes(formData.bloodgroup) && (
-                          <option value={formData.bloodgroup}>{formData.bloodgroup}</option>
-                        )}
-                      </select>
+                {/* Row 3: Phone number */}
+                <div className="form-group">
+                  <label htmlFor="phone">Phone number</label>
+                  <div className="input-with-icon">
+                    <div className="field-icon-wrapper">
+                      <Phone size={20} />
                     </div>
-                    <span className="helper-text">
-                      {formData.bloodgroup ? 'Blood group selected' : 'Select blood group'}
-                    </span>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      style={{ textAlign: 'left' }}
+                      required
+                    />
                   </div>
-
-                  {/* 7. Phone number */}
-                  <div className="form-group">
-                    <label htmlFor="phone">Phone number</label>
-                    <div className="input-with-icon">
-                      <div className="field-icon-wrapper">
-                        <Phone size={20} />
-                      </div>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        placeholder="Enter phone number"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        style={{ textAlign: 'left' }}
-                        required
-                      />
-                    </div>
-                    <span className="helper-text">
-                      {formData.phone ? 'Auto-populated / Editable' : 'Enter phone number'}
-                    </span>
-                  </div>
+                  <span className="helper-text">
+                    {formData.phone ? 'Auto-populated / Editable' : 'Enter phone number'}
+                  </span>
                 </div>
               </div>
             )}
