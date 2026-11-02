@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import ClubEvents from './pages/ClubEvents';
 import ClubEventRegistrations from './pages/ClubEventRegistrations';
+import SendCoupons from './pages/SendCoupons';
+import ScanAttendance from './pages/ScanAttendance';
 import ClubEventPublicRegistration from './pages/ClubEventPublicRegistration';
 import ClubEventPaymentPage from './pages/ClubEventPaymentPage';
 import DashboardLayout from './components/DashboardLayout';
@@ -29,6 +31,13 @@ function App() {
             <Route path="events" element={<Navigate to="/dashboard/events/club-events" replace />} />
             <Route path="events/club-events" element={<ClubEvents />} />
             <Route path="events/registrations" element={<ClubEventRegistrations />} />
+            <Route path="events/sendcoupons" element={<SendCoupons />} />
+            <Route path="events/send-coupons" element={<Navigate to="/dashboard/events/sendcoupons" replace />} />
+            <Route path="events/registrations/sendcoupons" element={<Navigate to="/dashboard/events/sendcoupons" replace />} />
+            <Route path="events/scan-attendance" element={<ScanAttendance />} />
+            <Route path="events/scanattendance" element={<Navigate to="/dashboard/events/scan-attendance" replace />} />
+            <Route path="events/sendcoupons/scan-attendance" element={<Navigate to="/dashboard/events/scan-attendance" replace />} />
+            <Route path="scan-attendance" element={<Navigate to="/dashboard/events/scan-attendance" replace />} />
             {/* Backward-compatibility aliases */}
             <Route path="students/club-events" element={<Navigate to="/dashboard/events/club-events" replace />} />
             <Route path="club-events" element={<Navigate to="/dashboard/events/club-events" replace />} />

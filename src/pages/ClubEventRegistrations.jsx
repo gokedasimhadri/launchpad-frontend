@@ -23,7 +23,8 @@ import {
   GraduationCap,
   Layers,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
+  Ticket
 } from 'lucide-react';
 import './ClubEventRegistrations.css';
 
@@ -444,6 +445,21 @@ const ClubEventRegistrations = () => {
             <Download size={18} />
             <span>Export CSV</span>
           </button>
+          <Link
+            to="/dashboard/events/sendcoupons"
+            className="export-csv-btn"
+            title="Send Unique Coupon Codes to Paid Students & Team Members"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              borderColor: '#d97706',
+              color: '#ffffff',
+              textDecoration: 'none',
+              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.25)'
+            }}
+          >
+            <Ticket size={18} />
+            <span>Send Coupons</span>
+          </Link>
         </div>
       </div>
 

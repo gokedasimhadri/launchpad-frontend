@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Menu, Calendar, ChevronDown, Sparkles, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Menu, Calendar, ChevronDown, Sparkles, ClipboardList, Ticket, QrCode } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from './ThemeToggle';
 import './DashboardLayout.css';
@@ -37,7 +37,11 @@ const DashboardLayout = () => {
     if (
       location.pathname.startsWith('/dashboard/events') ||
       location.pathname.includes('club-events') ||
-      location.pathname.includes('registrations')
+      location.pathname.includes('registrations') ||
+      location.pathname.includes('sendcoupons') ||
+      location.pathname.includes('send-coupons') ||
+      location.pathname.includes('scan-attendance') ||
+      location.pathname.includes('scanattendance')
     ) {
       setEventsMenuOpen(true);
     }
@@ -77,7 +81,11 @@ const DashboardLayout = () => {
   const isEventsActive =
     location.pathname.startsWith('/dashboard/events') ||
     location.pathname.includes('club-events') ||
-    location.pathname.includes('registrations');
+    location.pathname.includes('registrations') ||
+    location.pathname.includes('sendcoupons') ||
+    location.pathname.includes('send-coupons') ||
+    location.pathname.includes('scan-attendance') ||
+    location.pathname.includes('scanattendance');
 
   return (
     <div className="dashboard-layout">
@@ -186,11 +194,31 @@ const DashboardLayout = () => {
                   <li>
                     <Link
                       to="/dashboard/events/registrations"
-                      className={`submenu-link ${location.pathname.includes('/registrations') ? 'active' : ''}`}
+                      className={`submenu-link ${location.pathname.includes('/registrations') && !location.pathname.includes('/sendcoupons') && !location.pathname.includes('/send-coupons') ? 'active' : ''}`}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <ClipboardList size={15} style={{ color: 'var(--primary-color)' }} />
                       <span>Registrations & Payments</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/dashboard/events/sendcoupons"
+                      className={`submenu-link ${location.pathname.includes('/sendcoupons') || location.pathname.includes('/send-coupons') ? 'active' : ''}`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <Ticket size={15} style={{ color: 'var(--primary-color)' }} />
+                      <span>Send Coupons</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/dashboard/events/scan-attendance"
+                      className={`submenu-link ${location.pathname.includes('/scan-attendance') || location.pathname.includes('/scanattendance') ? 'active' : ''}`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <QrCode size={15} style={{ color: 'var(--primary-color)' }} />
+                      <span>Scan Attendance</span>
                     </Link>
                   </li>
                 </ul>
