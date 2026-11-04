@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   ArrowLeft,
   IdCard,
@@ -59,11 +60,11 @@ const ClubEventPaymentPage = () => {
     }
   }, []);
 
-  // Prevent browser refresh or page close while payment is processing/verifying
+  // Prevent browser refresh, back navigation, or page close while payment is processing/verifying
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (isProcessingPayment || isVerifyingPayment) {
-        const msg = 'Payment verification in progress! Please do not refresh or close this page until completed.';
+        const msg = 'Payment transaction in progress! Please DO NOT refresh, navigate back, or close this window until completed.';
         e.preventDefault();
         e.returnValue = msg;
         return msg;
@@ -71,6 +72,27 @@ const ClubEventPaymentPage = () => {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Trap browser back button while payment is processing/verifying
+    if (isProcessingPayment || isVerifyingPayment) {
+      window.history.pushState(null, '', window.location.href);
+
+      const handlePopState = () => {
+        window.history.pushState(null, '', window.location.href);
+        alert(
+          '⚠️ PAYMENT TRANSACTION IN PROGRESS!\n\n' +
+          'Please DO NOT click the Back button or Refresh the page until your payment confirmation is recorded.\n\n' +
+          'పేమెంట్ పూర్తయ్యే వరకు దయచేసి Back లేదా Refresh చేయకండి.'
+        );
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -394,6 +416,20 @@ const ClubEventPaymentPage = () => {
         </div>
       )}
 
+      {/* STICKY TOP ALERT WHILE PAYMENT GATEWAY IS OPEN */}
+      {isProcessingPayment && (
+        <div className="payment-progress-sticky-alert">
+          <div className="sticky-alert-inner">
+            <span className="sticky-pulsing-badge"></span>
+            <AlertTriangle size={18} className="sticky-alert-icon" />
+            <span className="sticky-alert-msg">
+              <strong>⚠️ TRANSACTION IN PROGRESS:</strong> Please do NOT refresh (F5), click Back (←), or close this window! Complete payment in the Razorpay box.
+            </span>
+
+          </div>
+        </div>
+      )}
+
       {/* SUCCESS / RECEIPT VIEW */}
       {paymentSuccessData ? (
         <div className="payment-card glass-card receipt-card">
@@ -543,6 +579,60 @@ const ClubEventPaymentPage = () => {
             <p className="event-name-tag">{event.name}</p>
           </div>
 
+          {/* IMPORTANT STUDENT WARNING BANNER */}
+          <div className="checkout-important-notice">
+            <div className="notice-header">
+              <div className="notice-icon-badge">
+                <AlertTriangle size={22} />
+                <span className="notice-pulse-ring"></span>
+              </div>
+              <div className="notice-title-box">
+                <div className="notice-badge-label">⚠️ ATTENTION / ముఖ్యమైన సూచన</div>
+                <h4 className="notice-heading">Do NOT Refresh, Close, or Press Back Button!</h4>
+              </div>
+            </div>
+
+            <div className="notice-body">
+              <p className="notice-telugu-highlight">
+                🛑 <strong>పేమెంట్ పూర్తయ్యి టికెట్ పాస్ కనిపించే వరకు పేజీని Refresh చేయవద్దు, Back బటన్ నొక్కవద్దు లేదా Close చేయవద్దు.</strong>
+              </p>
+              <p className="notice-english-desc">
+                Once you click <strong>Pay</strong>, complete your transaction in UPI/Cards/Netbanking and wait on this screen.
+                Do not navigate away until your Official Pass & Confirmation are generated.
+              </p>
+
+              <div className="notice-rules-grid">
+                <div className="notice-rule-card">
+                  <div className="rule-icon-circle">🚫</div>
+                  <div className="rule-text-box">
+                    <span className="rule-title">No Refresh (F5 / Reload)</span>
+                    <span className="rule-desc">పేజీని రీలోడ్ చేయకండి</span>
+                  </div>
+                </div>
+
+                <div className="notice-rule-card">
+                  <div className="rule-icon-circle">🚫</div>
+                  <div className="rule-text-box">
+                    <span className="rule-title">No Back Button (←)</span>
+                    <span className="rule-desc">బ్యాక్ బటన్ నొక్కకండి</span>
+                  </div>
+                </div>
+
+                <div className="notice-rule-card">
+                  <div className="rule-icon-circle">🚫</div>
+                  <div className="rule-text-box">
+                    <span className="rule-title">No Tab / Window Close</span>
+                    <span className="rule-desc">ట్యాబ్ ను క్లోజ్ చేయకండి</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="notice-footer-tip">
+                <span>💡 <strong>గమనిక:</strong> లావాదేవీ జరుగుతున్నప్పుడు పేజీని రీఫ్రెష్ చేస్తే బ్యాంక్ నుండి మనీ కట్ అయి రిజిస్ట్రేషన్ ప్రాసెస్ ఆగిపోయే ప్రమాదం ఉంది. పేమెంట్ పూర్తి చేసిన తర్వాత 3–5 సెకన్లు ఈ స్క్రీన్ పైనే వేచి ఉండండి.</span>
+              </div>
+            </div>
+          </div>
+
           <div className="checkout-content-grid">
             {/* STUDENT / TEAM DETAILS CARD */}
             <div className="details-panel glass-panel">
@@ -639,10 +729,17 @@ const ClubEventPaymentPage = () => {
               </div>
 
               <div className="edit-link-container">
-                <Link to={`/event/${slug}`} className="edit-details-link">
-                  <ArrowLeft size={14} />
-                  <span>Edit registration details</span>
-                </Link>
+                {isProcessingPayment || isVerifyingPayment ? (
+                  <span className="edit-details-link disabled" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                    <ArrowLeft size={14} />
+                    <span>Edit registration details (Disabled during payment)</span>
+                  </span>
+                ) : (
+                  <Link to={`/event/${slug}`} className="edit-details-link">
+                    <ArrowLeft size={14} />
+                    <span>Edit registration details</span>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -676,6 +773,16 @@ const ClubEventPaymentPage = () => {
                 <div className="security-text">
                   <strong>Secure 256-bit Encrypted Checkout</strong>
                   <span>Supports UPI (Google Pay, PhonePe, Paytm), Cards, & NetBanking.</span>
+                </div>
+              </div>
+
+              {/* ACTION WARNING NOTE BEFORE CLICKING PAY */}
+              <div className="pay-action-warning-note">
+                <AlertTriangle size={18} className="pay-action-icon" />
+                <div className="pay-action-note-text">
+                  <strong>Important: Stay on this page after clicking Pay!</strong>
+                  <p>Do not reload or press back. Verification completes automatically.</p>
+                  <span className="pay-action-telugu">పేమెంట్ పూర్తయ్యేవరకు బ్రౌజర్ బ్యాక్ కానీ రీఫ్రెష్ కానీ చేయకండి.</span>
                 </div>
               </div>
 
@@ -722,13 +829,16 @@ const ClubEventPaymentPage = () => {
             </h3>
 
             <div className="warning-banner-box">
-              <AlertCircle size={24} className="banner-warning-icon" />
+              <AlertCircle size={28} className="banner-warning-icon" />
               <div className="banner-text-content">
-                <strong>Please DO NOT Refresh or Close this Page!</strong>
-                <p>Payment verification is in progress. Please wait until your payment receipt is generated.</p>
-                <p style={{ marginTop: '0.4rem', fontSize: '0.84rem', color: '#f59e0b', fontWeight: 600, lineHeight: 1.4 }}>
-                  పేమెంట్ సక్సెస్ అయ్యే వరకు దయచేసి ఈ పేజీని రిఫ్రెష్ కానీ క్లోజ్ కానీ చేయకండి.
-                </p>
+                <strong className="banner-alert-title">🛑 DO NOT REFRESH, GO BACK, OR CLOSE THIS PAGE!</strong>
+                <strong className="banner-alert-telugu">పేమెంట్ పూర్తయ్యే వరకు పేజీని Refresh కానీ, Back కానీ, Close కానీ చేయకండి!</strong>
+                <p>Payment verification is in progress. Please wait until your official admit pass and receipt are generated.</p>
+                <div className="banner-bullet-pills">
+                  <span className="banner-pill-item">🚫 No Refresh (F5)</span>
+                  <span className="banner-pill-item">🚫 No Back Button (←)</span>
+                  <span className="banner-pill-item">🚫 No Tab Close (✕)</span>
+                </div>
               </div>
             </div>
 
