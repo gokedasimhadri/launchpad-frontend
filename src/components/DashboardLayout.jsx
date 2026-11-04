@@ -14,15 +14,18 @@ const DashboardLayout = () => {
   const { theme } = useTheme();
 
   // Check if logged-in user is Dean
+  const getUserAccount = () => {
+    try {
+      return JSON.parse(localStorage.getItem('userAccount') || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const userAccount = getUserAccount();
   const getIsDean = () => {
     const role = (localStorage.getItem('userRole') || '').toLowerCase();
-    let account = null;
-    try {
-      account = JSON.parse(localStorage.getItem('userAccount') || '{}');
-    } catch {
-      account = {};
-    }
-    const username = (account?.username || '').toLowerCase();
+    const username = (userAccount?.username || '').toLowerCase();
     return role === 'dean' || username === 'dean';
   };
 
@@ -95,6 +98,22 @@ const DashboardLayout = () => {
           <Menu size={24} />
         </button>
         <div className="navbar-right">
+          {userAccount?.username && (
+            <div className="top-user-info" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              padding: '0.35rem 0.75rem',
+              borderRadius: '20px',
+              background: isDean ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+              border: `1px solid ${isDean ? 'rgba(16, 185, 129, 0.25)' : 'rgba(59, 130, 246, 0.25)'}`,
+              color: isDean ? '#059669' : '#2563eb',
+              fontSize: '0.82rem',
+              fontWeight: '600'
+            }}>
+              <span>{isDean ? 'Dean (Admin)' : `Role: ${userAccount.username}`}</span>
+            </div>
+          )}
           <ThemeToggle />
           <button onClick={handleLogout} className="top-logout-btn" title="Logout">
             <LogOut size={20} />

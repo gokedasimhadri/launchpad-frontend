@@ -31,6 +31,20 @@ import html2canvas from 'html2canvas';
 import './SendCoupons.css';
 
 const SendCoupons = () => {
+  const getCurrentUser = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('userAccount') || '{}');
+      const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
+      const username = (user.username || '').trim();
+      const isDean = userRole === 'dean' || username.toLowerCase() === 'dean';
+      return { user, userRole, username, isDean };
+    } catch {
+      return { user: {}, userRole: '', username: '', isDean: false };
+    }
+  };
+
+  const { isDean, username: currentUsername } = getCurrentUser();
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialEventFilter = searchParams.get('eventId') || 'all';
 
@@ -99,6 +113,9 @@ const SendCoupons = () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
+      if (!isDean && currentUsername) {
+        params.append('role', currentUsername);
+      }
       if (filterEvent && filterEvent !== 'all') {
         params.append('eventId', filterEvent);
       }
@@ -379,18 +396,42 @@ const SendCoupons = () => {
     }
   };
 
-  // Download Pass as PDF
-  const handleDownloadPassPDF = (student) => {
-    const params = new URLSearchParams({
-      registrationId: student.registrationId,
-      rNo: student.rNo,
-    });
-    if (student.memberId) {
-      params.append('memberId', student.memberId);
+  // Download Pass as PDF using direct fetch blob
+  const handleDownloadPassPDF = async (student) => {
+    try {
+      showToast('Generating official event pass PDF...');
+      const params = new URLSearchParams({
+        registrationId: student.registrationId,
+        rNo: student.rNo,
+      });
+      if (student.memberId) {
+        params.append('memberId', student.memberId);
+      }
+      const downloadUrl = `${backendUrl}/api/club-events/coupons/download-pdf?${params.toString()}`;
+      const res = await fetch(downloadUrl);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const cleanRNo = String(student.rNo || 'student').replace(/[^a-zA-Z0-9]/g, '');
+      const cleanCode = String(student.couponCode || 'PASS').replace(/[^a-zA-Z0-9-]/g, '');
+      a.download = `Aditya_Event_Pass_${cleanRNo}_${cleanCode}.pdf`;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast('Official PDF Pass downloaded successfully!', 'success');
+    } catch (err) {
+      console.error('PDF download error:', err);
+      // Fallback to opening directly in browser
+      const params = new URLSearchParams({
+        registrationId: student.registrationId,
+        rNo: student.rNo,
+      });
+      if (student.memberId) params.append('memberId', student.memberId);
+      window.open(`${backendUrl}/api/club-events/coupons/download-pdf?${params.toString()}`, '_blank');
     }
-    const downloadUrl = `${backendUrl}/api/club-events/coupons/download-pdf?${params.toString()}`;
-    window.open(downloadUrl, '_blank');
-    showToast('Downloading official event pass PDF...');
   };
 
   // Export CSV
@@ -873,9 +914,9 @@ const SendCoupons = () => {
             <div className="coupon-modal-header">
               <h2>
                 <Ticket size={20} style={{ color: '#f59e0b' }} />
-                Official Event Coupon Pass
+                <span>Official Event Coupon Pass</span>
               </h2>
-              <button className="modal-close-btn" onClick={() => setPreviewStudent(null)}>
+              <button className="modal-close-btn" onClick={() => setPreviewStudent(null)} title="Close Pass">
                 <X size={20} />
               </button>
             </div>
@@ -885,11 +926,19 @@ const SendCoupons = () => {
               <div className="digital-pass-card" ref={passCardRef}>
                 {/* Header Strip */}
                 <div className="pass-header-strip">
-                  <div>
-                    <div className="pass-univ-name">Aditya University</div>
-                    <div className="pass-univ-sub">Event Coupon Pass</div>
+                  <div className="pass-header-brand">
+                    <img
+                      src="/ADITYA LOGO2.png"
+                      alt="Aditya University"
+                      className="pass-brand-logo"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                    <div className="pass-univ-meta">
+                      <div className="pass-univ-name">Aditya University</div>
+                      <div className="pass-univ-sub">Official Event Pass</div>
+                    </div>
                   </div>
-                  <div className="pass-verified-badge">&#10003; Paid & Verified</div>
+                  <div className="pass-verified-badge">&#10003; Paid &amp; Verified</div>
                 </div>
 
                 {/* Content Area */}
@@ -907,11 +956,11 @@ const SendCoupons = () => {
                       <div className="value">{previewStudent.rNo}</div>
                     </div>
                     <div className="pass-info-cell">
-                      <div className="label">Branch / Department</div>
+                      <div className="label">Branch / Dept</div>
                       <div className="value">{previewStudent.branch || 'General'}</div>
                     </div>
                     <div className="pass-info-cell">
-                      <div className="label">Role & Team</div>
+                      <div className="label">Role &amp; Team</div>
                       <div className="value">
                         {previewStudent.teamName
                           ? `${previewStudent.teamName} (${previewStudent.isLeader ? 'Leader' : 'Member'})`
@@ -920,13 +969,30 @@ const SendCoupons = () => {
                     </div>
                   </div>
 
+                  {/* Ticket Stub Divider with Cutout Notches */}
+                  <div className="pass-stub-divider">
+                    <span className="stub-notch notch-left"></span>
+                    <span className="stub-line"></span>
+                    <span className="stub-notch notch-right"></span>
+                  </div>
+
                   {/* Coupon Strip */}
                   <div className="pass-coupon-strip">
                     <div className="pass-code-box">
                       <div className="code-label">Unique Verification Coupon</div>
-                      <div className="code-val">{previewStudent.couponCode}</div>
+                      <div className="code-val-row">
+                        <span className="code-val">{previewStudent.couponCode}</span>
+                        <button
+                          className="code-copy-mini-btn"
+                          onClick={() => copyToClipboard(previewStudent.couponCode, 'card-copy')}
+                          title="Copy Coupon Code"
+                          type="button"
+                        >
+                          {copiedId === 'card-copy' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                        </button>
+                      </div>
                       <div className="code-note">
-                        Present this code or scan QR for event attendance.
+                        Present this pass code or scan QR for event attendance.
                       </div>
                     </div>
 
@@ -934,21 +1000,19 @@ const SendCoupons = () => {
                     <div className="pass-qr-box">
                       <QRCodeSVG
                         value={previewStudent.couponCode}
-                        size={110}
+                        size={84}
                         level="H"
                         includeMargin={false}
                       />
-                      <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', marginTop: '4px' }}>
-                        SCAN PASS
-                      </div>
+                      <div className="qr-caption">SCAN PASS</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer Strip */}
                 <div className="pass-footer-strip">
-                  <div>Issued by Technical & Cultural Events Council &bull; Aditya University</div>
-                  <div style={{ fontWeight: 700, color: '#0f172a' }}>Non-Transferable</div>
+                  <div>Issued by Aditya University</div>
+                  <div className="pass-security-tag">Non-Transferable</div>
                 </div>
               </div>
             </div>
@@ -958,45 +1022,47 @@ const SendCoupons = () => {
               <button
                 className="btn-secondary-action"
                 onClick={() => copyToClipboard(previewStudent.couponCode, 'modal-copy')}
+                title="Copy Coupon Code"
               >
-                <Copy size={16} />
-                <span>Copy Code</span>
+                {copiedId === 'modal-copy' ? <Check size={15} color="#10b981" /> : <Copy size={15} />}
+                <span>{copiedId === 'modal-copy' ? 'Copied' : 'Copy Code'}</span>
               </button>
 
               <button
                 className="btn-secondary-action"
                 onClick={() => window.print()}
+                title="Print official pass"
               >
-                <Printer size={16} />
-                <span>Print Pass</span>
-              </button>
-
-              <button
-                className="btn-primary-action"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)' }}
-                onClick={() => handleDownloadPassPDF(previewStudent)}
-                title="Download official high-resolution vector PDF admit pass"
-              >
-                <Download size={16} />
-                <span>Download Pass (PDF)</span>
+                <Printer size={15} />
+                <span>Print</span>
               </button>
 
               <button
                 className="btn-secondary-action"
                 onClick={() => handleDownloadPassPNG(previewStudent)}
                 disabled={isDownloadingImage}
-                title="Download PNG image"
+                title="Download high-resolution PNG image"
               >
-                <Download size={16} />
-                <span>{isDownloadingImage ? 'Generating PNG...' : 'PNG Image'}</span>
+                <Download size={15} />
+                <span>{isDownloadingImage ? 'Generating...' : 'PNG Image'}</span>
               </button>
 
               <button
-                className="btn-bulk-send"
+                className="btn-primary-action download-pdf-btn"
+                onClick={() => handleDownloadPassPDF(previewStudent)}
+                title="Download high-resolution official vector PDF admit pass"
+              >
+                <Download size={15} />
+                <span>Download Pass (PDF)</span>
+              </button>
+
+              <button
+                className="btn-bulk-send send-email-btn"
                 onClick={() => handleSendSingleEmail(previewStudent)}
                 disabled={sendingId === previewStudent.id || !previewStudent.email}
+                title={previewStudent.email ? `Email pass to ${previewStudent.email}` : 'No email address on record'}
               >
-                <Mail size={16} />
+                <Mail size={15} />
                 <span>{sendingId === previewStudent.id ? 'Sending...' : 'Send to Email'}</span>
               </button>
             </div>

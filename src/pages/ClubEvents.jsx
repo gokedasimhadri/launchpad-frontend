@@ -22,12 +22,30 @@ import {
   ToggleRight,
   ClipboardList,
   Lock,
-  User
+  User,
+  Shield
 } from 'lucide-react';
 import './ClubEvents.css';
 
 const ClubEvents = () => {
+  // Current authenticated user & role
+  const getCurrentUser = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('userAccount') || '{}');
+      const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
+      const username = (user.username || '').trim();
+      const isDean = userRole === 'dean' || username.toLowerCase() === 'dean';
+      return { user, userRole, username, isDean };
+    } catch {
+      return { user: {}, userRole: '', username: '', isDean: false };
+    }
+  };
+
+  const { isDean, username: currentUsername } = getCurrentUser();
+
   const [events, setEvents] = useState([]);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [filterRole, setFilterRole] = useState(isDean ? 'all' : (currentUsername || ''));
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRegistration, setFilterRegistration] = useState('all');
@@ -52,7 +70,7 @@ const ClubEvents = () => {
     registration: 'open',
     slug_link: '',
     status: 'active',
-    role: '',
+    role: !isDean ? currentUsername : '',
     password: '',
     teamType: 'per_head',
     personsCount: 2
@@ -75,14 +93,57 @@ const ClubEvents = () => {
       .replace(/^-+|-+$/g, '');
   };
 
+  // Fetch available roles (for Dean)
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/club-events/roles`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setAvailableRoles(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isDean) {
+      fetchRoles();
+    }
+  }, [isDean]);
+
   // Fetch events
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${backendUrl}/api/club-events`);
+      const activeRole = !isDean ? currentUsername : (filterRole !== 'all' ? filterRole : '');
+      const queryParams = new URLSearchParams();
+      if (activeRole) {
+        queryParams.append('role', activeRole);
+      }
+      if (filterStatus && filterStatus !== 'all') {
+        queryParams.append('status', filterStatus);
+      }
+      if (filterRegistration && filterRegistration !== 'all') {
+        queryParams.append('registration', filterRegistration);
+      }
+
+      const queryString = queryParams.toString();
+      const response = await fetch(`${backendUrl}/api/club-events${queryString ? `?${queryString}` : ''}`);
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
-        setEvents(data.data);
+        let list = data.data;
+        // Non-dean user: strictly filter events to only their own role
+        if (!isDean && currentUsername) {
+          list = list.filter(e => (e.role || '').trim().toLowerCase() === currentUsername.toLowerCase());
+        }
+        setEvents(list);
+
+        // Populate available roles for Dean if not yet loaded
+        if (isDean && availableRoles.length === 0) {
+          const distinct = Array.from(new Set(data.data.map(e => (e.role || '').trim()).filter(Boolean)));
+          if (distinct.length > 0) setAvailableRoles(distinct);
+        }
       } else {
         showToast(data.message || 'Failed to fetch events', 'error');
       }
@@ -96,7 +157,7 @@ const ClubEvents = () => {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [filterRole, filterStatus, filterRegistration]);
 
   // Handle open Add Modal
   const handleOpenAddModal = () => {
@@ -107,7 +168,7 @@ const ClubEvents = () => {
       registration: 'open',
       slug_link: '',
       status: 'active',
-      role: '',
+      role: !isDean ? currentUsername : (filterRole !== 'all' ? filterRole : ''),
       password: '',
       teamType: 'per_head',
       personsCount: 2
@@ -125,7 +186,7 @@ const ClubEvents = () => {
       registration: event.registration || 'open',
       slug_link: event.slug_link || '',
       status: event.status || 'active',
-      role: event.role || '',
+      role: event.role || (!isDean ? currentUsername : ''),
       password: event.password || '',
       teamType: event.teamType || 'per_head',
       personsCount: event.personsCount || event.maxTeamSize || event.minTeamSize || 2
@@ -185,7 +246,7 @@ const ClubEvents = () => {
         registration: formData.registration,
         slug_link: cleanSlug,
         status: formData.status,
-        role: formData.role ? formData.role.trim() : '',
+        role: !isDean ? currentUsername : (formData.role ? formData.role.trim() : ''),
         password: formData.password ? formData.password.trim() : '',
         teamType: formData.teamType,
         personsCount: formData.teamType === 'per_team' ? Number(formData.personsCount) : 1,
@@ -303,11 +364,23 @@ const ClubEvents = () => {
     });
   };
 
-  // Filtered Events
+  // Filtered Events (strictly role-scoped)
   const filteredEvents = events.filter(event => {
+    // Non-dean user: only see events matching their logged-in role
+    if (!isDean && currentUsername) {
+      if ((event.role || '').trim().toLowerCase() !== currentUsername.toLowerCase()) {
+        return false;
+      }
+    } else if (isDean && filterRole !== 'all') {
+      if ((event.role || '').trim().toLowerCase() !== filterRole.toLowerCase()) {
+        return false;
+      }
+    }
+
     const matchesSearch =
       (event.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (event.slug_link || '').toLowerCase().includes(searchQuery.toLowerCase());
+      (event.slug_link || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (event.role || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesReg =
       filterRegistration === 'all' ||
@@ -320,11 +393,11 @@ const ClubEvents = () => {
     return matchesSearch && matchesReg && matchesStatus;
   });
 
-  // Calculate Statistics
-  const totalCount = events.length;
-  const activeCount = events.filter(e => e.status === 'active').length;
-  const openCount = events.filter(e => e.registration === 'open').length;
-  const inactiveCount = events.filter(e => e.status === 'inactive').length;
+  // Calculate Statistics (scoped strictly to the role-filtered events)
+  const totalCount = filteredEvents.length;
+  const activeCount = filteredEvents.filter(e => e.status === 'active').length;
+  const openCount = filteredEvents.filter(e => e.registration === 'open').length;
+  const inactiveCount = filteredEvents.filter(e => e.status === 'inactive').length;
 
   return (
     <div className="club-events-page">
@@ -352,11 +425,34 @@ const ClubEvents = () => {
       {/* Page Header */}
       <div className="club-events-header">
         <div className="header-title-area">
-          <h1>
-            <Sparkles size={28} style={{ color: 'var(--primary-color)' }} />
-            Club Events Management
-          </h1>
-          <p>Create, customize, and oversee student club events, registration fees, and public slugs.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sparkles size={28} style={{ color: 'var(--primary-color)' }} />
+              Club Events Management
+            </h1>
+            {!isDean && currentUsername && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.82rem',
+                fontWeight: '600',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                background: 'rgba(37, 99, 235, 0.1)',
+                border: '1px solid rgba(37, 99, 235, 0.25)',
+                color: '#1d4ed8'
+              }}>
+                <User size={14} />
+                <span>Role: {currentUsername}</span>
+              </span>
+            )}
+          </div>
+          <p style={{ marginTop: '0.35rem' }}>
+            {!isDean && currentUsername
+              ? `Displaying events exclusively managed under role "${currentUsername}".`
+              : 'Create, customize, and oversee student club events, registration fees, and public slugs.'}
+          </p>
         </div>
         <button className="create-event-btn" onClick={handleOpenAddModal}>
           <Plus size={20} />
@@ -418,6 +514,40 @@ const ClubEvents = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        {/* Role Filter: For Dean, a selector; For Club Manager, a locked role badge */}
+        {isDean ? (
+          <div className="events-filter-box">
+            <User size={18} className="events-filter-icon" />
+            <select
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              title="Filter by Role Username"
+            >
+              <option value="all">All Roles</option>
+              {availableRoles.map(r => (
+                <option key={r} value={r}>Role: {r}</option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="role-locked-pill" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.5rem 0.85rem',
+            background: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.25)',
+            borderRadius: '8px',
+            color: '#1d4ed8',
+            fontWeight: '600',
+            fontSize: '0.85rem',
+            whiteSpace: 'nowrap'
+          }}>
+            <User size={16} />
+            <span>Role: {currentUsername}</span>
+          </div>
+        )}
 
         <div className="events-filter-box">
           <Filter size={18} className="events-filter-icon" />
@@ -823,10 +953,14 @@ const ClubEvents = () => {
                       placeholder="e.g. leoclub or robotics_admin"
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      disabled={!isDean}
+                      style={!isDean ? { background: 'rgba(0, 0, 0, 0.05)', cursor: 'not-allowed' } : {}}
                     />
                   </div>
                   <span className="helper-text" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Username used to log into frontend with event privileges
+                    {!isDean
+                      ? `Role locked to your authenticated account: "${currentUsername}"`
+                      : 'Username used to log into frontend with event privileges'}
                   </span>
                 </div>
 

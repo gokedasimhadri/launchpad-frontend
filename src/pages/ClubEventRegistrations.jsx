@@ -29,11 +29,28 @@ import {
 import './ClubEventRegistrations.css';
 
 const ClubEventRegistrations = () => {
+  // Current user info
+  const getCurrentUser = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('userAccount') || '{}');
+      const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
+      const username = (user.username || '').trim();
+      const isDean = userRole === 'dean' || username.toLowerCase() === 'dean';
+      return { user, userRole, username, isDean };
+    } catch {
+      return { user: {}, userRole: '', username: '', isDean: false };
+    }
+  };
+
+  const { isDean, username: currentUsername } = getCurrentUser();
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialEventFilter = searchParams.get('eventId') || 'all';
 
   const [registrations, setRegistrations] = useState([]);
   const [eventsList, setEventsList] = useState([]);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [filterRole, setFilterRole] = useState(isDean ? 'all' : (currentUsername || ''));
   const [stats, setStats] = useState({ total: 0, paid: 0, pending: 0, free: 0, totalRevenue: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -125,13 +142,42 @@ const ClubEventRegistrations = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Fetch available roles (for Dean)
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/club-events/roles`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setAvailableRoles(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isDean) {
+      fetchRoles();
+    }
+  }, [isDean]);
+
   // Fetch events list for dropdown
   const fetchEventsList = async () => {
     try {
-      const res = await fetch(`${backendUrl}/api/club-events`);
+      const activeRole = !isDean ? currentUsername : (filterRole !== 'all' ? filterRole : '');
+      const queryParams = new URLSearchParams();
+      if (activeRole) {
+        queryParams.append('role', activeRole);
+      }
+      const qs = queryParams.toString();
+      const res = await fetch(`${backendUrl}/api/club-events${qs ? `?${qs}` : ''}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
-        setEventsList(data.data);
+        let list = data.data;
+        if (!isDean && currentUsername) {
+          list = list.filter(e => (e.role || '').trim().toLowerCase() === currentUsername.toLowerCase());
+        }
+        setEventsList(list);
       }
     } catch (err) {
       console.error('Error fetching events list:', err);
@@ -142,7 +188,11 @@ const ClubEventRegistrations = () => {
   const fetchRegistrations = async () => {
     setIsLoading(true);
     try {
+      const activeRole = !isDean ? currentUsername : (filterRole !== 'all' ? filterRole : '');
       const queryParams = new URLSearchParams();
+      if (activeRole) {
+        queryParams.append('role', activeRole);
+      }
       if (filterEvent && filterEvent !== 'all') {
         queryParams.append('eventId', filterEvent);
       }
@@ -179,11 +229,11 @@ const ClubEventRegistrations = () => {
 
   useEffect(() => {
     fetchEventsList();
-  }, []);
+  }, [filterRole]);
 
   useEffect(() => {
     fetchRegistrations();
-  }, [filterEvent, filterStatus, filterBranch]);
+  }, [filterEvent, filterStatus, filterBranch, filterRole]);
 
   // Handle live search with debounce
   useEffect(() => {
@@ -415,11 +465,34 @@ const ClubEventRegistrations = () => {
       {/* Page Header */}
       <div className="registrations-header">
         <div className="header-title-area">
-          <h1>
-            <ClipboardList size={28} style={{ color: 'var(--primary-color)' }} />
-            Event Registrations
-          </h1>
-          <p>Real-time records of registered students, roll numbers, branches, payment transactions, and fees.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ClipboardList size={28} style={{ color: 'var(--primary-color)' }} />
+              Event Registrations
+            </h1>
+            {!isDean && currentUsername && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.82rem',
+                fontWeight: '600',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                background: 'rgba(37, 99, 235, 0.1)',
+                border: '1px solid rgba(37, 99, 235, 0.25)',
+                color: '#1d4ed8'
+              }}>
+                <User size={14} />
+                <span>Role: {currentUsername}</span>
+              </span>
+            )}
+          </div>
+          <p style={{ marginTop: '0.35rem' }}>
+            {!isDean && currentUsername
+              ? `Real-time records for events managed under role "${currentUsername}".`
+              : 'Real-time records of registered students, roll numbers, branches, payment transactions, and fees.'}
+          </p>
         </div>
         <div className="header-actions">
           <button className="header-refresh-btn" onClick={fetchRegistrations} title="Refresh records">
@@ -533,6 +606,45 @@ const ClubEventRegistrations = () => {
             </button>
           )}
         </div>
+
+        {/* Filter Role (Dean) or Role Badge (Club Manager) */}
+        {isDean ? (
+          <div className="filter-item">
+            <User size={16} className="filter-icon" />
+            <select
+              value={filterRole}
+              onChange={(e) => {
+                setFilterRole(e.target.value);
+                setFilterEvent('all');
+                setCurrentPage(1);
+              }}
+              className="filter-select"
+              title="Filter by Role"
+            >
+              <option value="all">All Roles</option>
+              {availableRoles.map((r) => (
+                <option key={r} value={r}>Role: {r}</option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="role-locked-pill" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.5rem 0.85rem',
+            background: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.25)',
+            borderRadius: '8px',
+            color: '#1d4ed8',
+            fontWeight: '600',
+            fontSize: '0.85rem',
+            whiteSpace: 'nowrap'
+          }}>
+            <User size={16} />
+            <span>Role: {currentUsername}</span>
+          </div>
+        )}
 
         {/* Filter Event */}
         <div className="filter-item">

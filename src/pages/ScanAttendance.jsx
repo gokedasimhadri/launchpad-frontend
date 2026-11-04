@@ -24,6 +24,20 @@ import { Html5Qrcode } from 'html5-qrcode';
 import './ScanAttendance.css';
 
 const ScanAttendance = () => {
+  const getCurrentUser = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('userAccount') || '{}');
+      const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
+      const username = (user.username || '').trim();
+      const isDean = userRole === 'dean' || username.toLowerCase() === 'dean';
+      return { user, userRole, username, isDean };
+    } catch {
+      return { user: {}, userRole: '', username: '', isDean: false };
+    }
+  };
+
+  const { isDean, username: currentUsername } = getCurrentUser();
+
   const [searchParams] = useSearchParams();
   const initialEventFilter = searchParams.get('eventId') || 'all';
 
@@ -107,6 +121,9 @@ const ScanAttendance = () => {
     setIsLoadingRoster(true);
     try {
       const params = new URLSearchParams();
+      if (!isDean && currentUsername) {
+        params.append('role', currentUsername);
+      }
       if (selectedEvent && selectedEvent !== 'all') {
         params.append('eventId', selectedEvent);
       }
