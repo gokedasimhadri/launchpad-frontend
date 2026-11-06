@@ -173,16 +173,65 @@
 }
 
 /* Camera Scanner Viewport */
+.camera-scanner-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.camera-top-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-camera-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.btn-camera-toggle.btn-close-cam {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.btn-camera-toggle.btn-close-cam:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+}
+
+.btn-camera-toggle.btn-open-cam {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-camera-toggle.btn-open-cam:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+}
+
 .camera-scanner-viewport {
   position: relative;
   width: 100%;
-  min-height: 320px;
-  background: #0f172a;
+  min-height: 340px;
+  background: #000000;
   border-radius: 18px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
 }
 
 #attendance-qr-reader {
@@ -201,8 +250,8 @@
 .camera-laser-line {
   position: absolute;
   top: 15%;
-  left: 10%;
-  right: 10%;
+  left: 8%;
+  right: 8%;
   height: 3px;
   background: linear-gradient(90deg, transparent, #22c55e, transparent);
   box-shadow: 0 0 15px #22c55e;
@@ -214,6 +263,123 @@
 @keyframes laserScan {
   0% { top: 15%; }
   100% { top: 85%; }
+}
+
+/* Viewfinder corner brackets (Image 2 style) */
+.viewfinder-brackets {
+  position: absolute;
+  inset: 12%;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.bracket {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: #ffffff;
+  border-style: solid;
+  border-width: 0;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.bracket-tl {
+  top: 0;
+  left: 0;
+  border-top-width: 3.5px;
+  border-left-width: 3.5px;
+  border-top-left-radius: 4px;
+}
+
+.bracket-tr {
+  top: 0;
+  right: 0;
+  border-top-width: 3.5px;
+  border-right-width: 3.5px;
+  border-top-right-radius: 4px;
+}
+
+.bracket-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 3.5px;
+  border-left-width: 3.5px;
+  border-bottom-left-radius: 4px;
+}
+
+.bracket-br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 3.5px;
+  border-right-width: 3.5px;
+  border-bottom-right-radius: 4px;
+}
+
+.camera-dormant-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #f1f5f9;
+}
+
+/* Bottom Camera Device Selector Row (Ref Image 2) */
+.camera-device-selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.camera-count-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.camera-select-dropdown {
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.camera-select-dropdown:focus {
+  border-color: #2563eb;
+}
+
+.btn-camera-scan-toggle {
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-camera-scan-toggle:hover {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
 }
 
 .camera-controls-bar {
@@ -620,4 +786,100 @@
 .btn-download-excel svg {
   color: #ffffff;
   flex-shrink: 0;
+}
+
+/* ==================== ATTENDANCE ROSTER PAGINATION ==================== */
+.table-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.15rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-card);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.pagination-info strong {
+  color: var(--text-main);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+
+.page-size-selector select {
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.page-size-selector select:focus {
+  border-color: var(--primary-color);
+}
+
+.page-nav-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.page-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-nav-btn:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.page-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  padding: 0 0.35rem;
+}
+
+.page-indicator strong {
+  color: var(--text-main);
 }

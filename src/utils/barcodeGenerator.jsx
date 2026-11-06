@@ -69,24 +69,25 @@ export function generateCode128Bars(text, quietZoneModules = 12) {
  */
 export const BarcodeSVG = ({
   value,
-  height = 64,
+  height = 76,
   showText = false,
   className = '',
   style = {}
 }) => {
   if (!value) return null;
 
-  // Use compact quiet zone (6 modules) so barcode bars fill the full horizontal width
-  const { totalModules, bars } = generateCode128Bars(value, 6);
+  // Use full standard quiet zone (12 modules) for optimal optical camera scanning
+  const { totalModules, bars } = generateCode128Bars(value, 12);
   const textSpace = showText ? 16 : 0;
   const totalSvgHeight = height + textSpace;
 
   return (
     <svg
       viewBox={`0 0 ${totalModules} ${totalSvgHeight}`}
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      shapeRendering="crispEdges"
       style={{
         display: 'block',
         width: '100%',

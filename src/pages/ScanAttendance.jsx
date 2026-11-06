@@ -20,7 +20,9 @@ import {
   Ticket,
   FileText,
   Barcode,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import './ScanAttendance.css';
@@ -49,6 +51,13 @@ const ScanAttendance = () => {
   const [cameraError, setCameraError] = useState(null);
   const html5QrCodeRef = useRef(null);
 
+  // Camera devices & selection (Reference Image 2)
+  const [cameras, setCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState('');
+  const barcodeDetectorRafRef = useRef(null);
+  const isVerifyingRef = useRef(false);
+  const lastScanRef = useRef({ code: '', time: 0 });
+
   // Manual input
   const [manualCode, setManualCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -70,6 +79,15 @@ const ScanAttendance = () => {
   const [rosterSearch, setRosterSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'present' | 'pending'
   const [isLoadingRoster, setIsLoadingRoster] = useState(true);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Reset pagination on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedEvent, statusFilter, rosterSearch]);
 
   // Toast
   const [toast, setToast] = useState(null);
@@ -245,62 +263,155 @@ const ScanAttendance = () => {
     };
   }, [selectedEvent, isVerifying]);
 
-  // Toggle Camera
-  const startCamera = async () => {
-    setCameraError(null);
-    try {
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode('attendance-qr-reader', {
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.EAN_13
-          ],
-          verbose: false
-        });
-      }
+  // Keep isVerifyingRef synchronized for frame-scanning loops
+  useEffect(() => {
+    isVerifyingRef.current = isVerifying;
+  }, [isVerifying]);
 
-      await html5QrCodeRef.current.start(
-        { facingMode: 'environment' },
-        {
-          fps: 15,
-          qrbox: (viewfinderWidth, viewfinderHeight) => {
-            return {
-              width: Math.min(viewfinderWidth * 0.9, 360),
-              height: Math.min(viewfinderHeight * 0.55, 180)
-            };
-          },
-          aspectRatio: 1.3333,
-        },
-        (decodedText) => {
-          // Prevent multiple triggers within short interval
-          if (!isVerifying) {
-            handleVerifyCode(decodedText);
+  // Enumerate all available camera video devices on mount
+  useEffect(() => {
+    let isMounted = true;
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        if (!isMounted || !devices || devices.length === 0) return;
+        setCameras(devices);
+        // Prioritize DroidCam Video, or back/environment camera, otherwise first
+        const droidCam = devices.find((d) => d.label && d.label.toLowerCase().includes('droidcam'));
+        const backCam = devices.find((d) => d.label && (d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment')));
+        const chosen = droidCam || backCam || devices[0];
+        setSelectedCameraId((prev) => prev || chosen.id);
+      })
+      .catch((err) => {
+        console.warn('Unable to query camera list:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Instant code detected handler with debounce
+  const onCodeDetected = (rawCode) => {
+    if (!rawCode || isVerifyingRef.current) return;
+    const clean = rawCode.trim();
+    const now = Date.now();
+    // Debounce identical scans within 2.2 seconds
+    if (lastScanRef.current.code === clean && now - lastScanRef.current.time < 2200) {
+      return;
+    }
+    lastScanRef.current = { code: clean, time: now };
+    handleVerifyCode(clean);
+  };
+
+  // Start Hardware-Accelerated BarcodeDetector loop on active video stream (sub-5ms recognition)
+  const startBarcodeDetectorLoop = () => {
+    if (typeof window === 'undefined' || !('BarcodeDetector' in window)) return;
+
+    try {
+      const detector = new window.BarcodeDetector({
+        formats: ['code_128', 'qr_code', 'code_39', 'ean_13', 'upc_a']
+      });
+
+      const detectFrame = async () => {
+        const video = document.querySelector('#attendance-qr-reader video');
+        if (video && video.readyState >= 2 && !video.paused) {
+          try {
+            const results = await detector.detect(video);
+            if (results && results.length > 0 && results[0].rawValue) {
+              onCodeDetected(results[0].rawValue);
+            }
+          } catch {
+            // Frame detection error ignored
           }
-        },
-        () => {
-          // scan failure / frame without barcode - ignore
         }
-      );
-      setIsCameraActive(true);
-    } catch (err) {
-      console.error('Camera start error:', err);
-      setCameraError('Unable to access camera. Please allow camera permissions or use File/Manual mode.');
-      setIsCameraActive(false);
+        barcodeDetectorRafRef.current = requestAnimationFrame(detectFrame);
+      };
+
+      barcodeDetectorRafRef.current = requestAnimationFrame(detectFrame);
+    } catch (e) {
+      console.warn('BarcodeDetector initialization skipped:', e);
     }
   };
 
   const stopCamera = async () => {
+    if (barcodeDetectorRafRef.current) {
+      cancelAnimationFrame(barcodeDetectorRafRef.current);
+      barcodeDetectorRafRef.current = null;
+    }
     try {
       if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
         await html5QrCodeRef.current.stop();
         html5QrCodeRef.current.clear();
       }
     } catch (err) {
-      console.error('Error stopping camera:', err);
+      console.warn('Error stopping camera:', err);
     } finally {
+      setIsCameraActive(false);
+    }
+  };
+
+  // Start Camera with exact Camera ID and generous scanning bounds
+  const startCamera = async (targetCameraId) => {
+    setCameraError(null);
+    const camId = targetCameraId || selectedCameraId;
+
+    try {
+      // Cancel previous native frame loop if any
+      if (barcodeDetectorRafRef.current) {
+        cancelAnimationFrame(barcodeDetectorRafRef.current);
+        barcodeDetectorRafRef.current = null;
+      }
+
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        await html5QrCodeRef.current.stop();
+      }
+
+      if (!html5QrCodeRef.current) {
+        html5QrCodeRef.current = new Html5Qrcode('attendance-qr-reader', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.UPC_A
+          ],
+          verbose: false
+        });
+      }
+
+      // Scanner configuration - generous qrbox so barcode fits without edge cropping
+      const config = {
+        fps: 30, // 30 FPS for immediate response
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          return {
+            width: Math.min(Math.floor(viewfinderWidth * 0.95), 520),
+            height: Math.min(Math.floor(viewfinderHeight * 0.85), 360)
+          };
+        },
+        aspectRatio: 1.0,
+        disableFlip: false
+      };
+
+      const cameraIdOrConfig = camId ? camId : { facingMode: 'environment' };
+
+      await html5QrCodeRef.current.start(
+        cameraIdOrConfig,
+        config,
+        (decodedText) => {
+          onCodeDetected(decodedText);
+        },
+        () => {
+          // Frame without barcode - ignored
+        }
+      );
+
+      setIsCameraActive(true);
+
+      // Start native GPU-accelerated BarcodeDetector loop for instant scanning
+      startBarcodeDetectorLoop();
+    } catch (err) {
+      console.error('Camera start error:', err);
+      setCameraError('Unable to access camera. Please allow camera permissions or check device connection.');
       setIsCameraActive(false);
     }
   };
@@ -308,7 +419,7 @@ const ScanAttendance = () => {
   // Manage Camera on tab change & unmount
   useEffect(() => {
     if (scanMode === 'camera') {
-      startCamera();
+      startCamera(selectedCameraId);
     } else {
       stopCamera();
     }
@@ -564,6 +675,12 @@ const ScanAttendance = () => {
     return true;
   });
 
+  // Pagination calculations
+  const totalRosterItems = filteredRoster.length;
+  const totalRosterPages = Math.ceil(totalRosterItems / pageSize) || 1;
+  const startRosterIndex = (currentPage - 1) * pageSize;
+  const currentRosterItems = filteredRoster.slice(startRosterIndex, startRosterIndex + pageSize);
+
   return (
     <div className="scan-attendance-page">
       {/* Toast Feedback */}
@@ -692,16 +809,42 @@ const ScanAttendance = () => {
             </button>
           </div>
 
-          {/* Mode 1: Camera Scanner */}
+          {/* Mode 1: Camera Scanner (Matching Reference Image 2) */}
           {scanMode === 'camera' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="camera-scanner-wrapper">
+              {/* Top Close / Open Camera Red Action Button */}
+              <div className="camera-top-control">
+                <button
+                  className={`btn-camera-toggle ${isCameraActive ? 'btn-close-cam' : 'btn-open-cam'}`}
+                  onClick={isCameraActive ? stopCamera : () => startCamera(selectedCameraId)}
+                  title={isCameraActive ? 'Close camera feed' : 'Open camera feed'}
+                >
+                  <Camera size={16} />
+                  <span>{isCameraActive ? 'Close Camera' : 'Open Camera'}</span>
+                </button>
+              </div>
+
+              {/* Viewport with Corner Brackets */}
               <div className="camera-scanner-viewport">
                 <div id="attendance-qr-reader"></div>
-                {isCameraActive && <div className="camera-laser-line"></div>}
+                {isCameraActive && (
+                  <>
+                    <div className="camera-laser-line"></div>
+                    <div className="viewfinder-brackets">
+                      <span className="bracket bracket-tl"></span>
+                      <span className="bracket bracket-tr"></span>
+                      <span className="bracket bracket-bl"></span>
+                      <span className="bracket bracket-br"></span>
+                    </div>
+                  </>
+                )}
                 {!isCameraActive && !cameraError && (
-                  <div style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center', padding: '2rem' }}>
-                    <RefreshCw size={24} className="spinning" style={{ margin: '0 auto 0.5rem auto' }} />
-                    <div>Initializing Camera Scanner...</div>
+                  <div className="camera-dormant-placeholder">
+                    <Camera size={44} style={{ margin: '0 auto 0.75rem auto', opacity: 0.4 }} />
+                    <div style={{ fontWeight: 700, fontSize: '1rem', color: '#f1f5f9' }}>Camera is currently closed</div>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.35rem' }}>
+                      Click 'Open Camera' above or choose a camera device below to begin scanning
+                    </span>
                   </div>
                 )}
                 {cameraError && (
@@ -712,17 +855,36 @@ const ScanAttendance = () => {
                 )}
               </div>
 
-              <div className="camera-controls-bar">
-                <button
-                  className="btn-secondary-action"
-                  onClick={isCameraActive ? stopCamera : startCamera}
-                >
-                  <Camera size={15} />
-                  <span>{isCameraActive ? 'Pause Camera' : 'Start Camera'}</span>
-                </button>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Point camera at the barcode on the pass or phone screen (Handheld USB scanners supported automatically)
+              {/* Bottom Camera Selector & Controls Row (Exact match to Reference Image 2) */}
+              <div className="camera-device-selector-row">
+                <span className="camera-count-label">
+                  Select Camera ({cameras.length})
                 </span>
+                <select
+                  className="camera-select-dropdown"
+                  value={selectedCameraId}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setSelectedCameraId(newId);
+                    startCamera(newId);
+                  }}
+                >
+                  {cameras.length === 0 ? (
+                    <option value="">Default Camera</option>
+                  ) : (
+                    cameras.map((cam, idx) => (
+                      <option key={cam.id || idx} value={cam.id}>
+                        {cam.label || `Camera ${idx + 1}`}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <button
+                  className="btn-camera-scan-toggle"
+                  onClick={isCameraActive ? stopCamera : () => startCamera(selectedCameraId)}
+                >
+                  {isCameraActive ? 'Stop Scanning' : 'Start Scanning'}
+                </button>
               </div>
             </div>
           )}
@@ -953,14 +1115,14 @@ const ScanAttendance = () => {
                     <div>Loading attendance records...</div>
                   </td>
                 </tr>
-              ) : filteredRoster.length === 0 ? (
+              ) : currentRosterItems.length === 0 ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                     No participants found matching the current filters.
                   </td>
                 </tr>
               ) : (
-                filteredRoster.map((student) => {
+                currentRosterItems.map((student) => {
                   const isPresent = student.attendanceStatus === 'present';
 
                   return (
@@ -1017,6 +1179,60 @@ const ScanAttendance = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {totalRosterItems > 0 && (
+          <div className="table-pagination-bar">
+            <div className="pagination-info">
+              Showing <strong>{startRosterIndex + 1}</strong> to{' '}
+              <strong>{Math.min(startRosterIndex + pageSize, totalRosterItems)}</strong> of{' '}
+              <strong>{totalRosterItems}</strong> participants
+            </div>
+
+            <div className="pagination-controls">
+              <div className="page-size-selector">
+                <span>Show</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span>per page</span>
+              </div>
+
+              <div className="page-nav-btns">
+                <button
+                  className="page-nav-btn"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  title="Previous page"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Prev</span>
+                </button>
+                <span className="page-indicator">
+                  Page <strong>{currentPage}</strong> of <strong>{totalRosterPages}</strong>
+                </span>
+                <button
+                  className="page-nav-btn"
+                  disabled={currentPage >= totalRosterPages}
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalRosterPages))}
+                  title="Next page"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

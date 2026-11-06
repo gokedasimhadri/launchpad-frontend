@@ -25,7 +25,8 @@ import {
   ShieldCheck,
   Info,
   QrCode,
-  Barcode
+  Barcode,
+  RotateCcw
 } from 'lucide-react';
 import BarcodeSVG from '../utils/barcodeGenerator';
 import { QRCodeSVG } from 'qrcode.react';
@@ -208,13 +209,14 @@ const SendCoupons = () => {
     });
   };
 
-  // Single Email Send
+  // Single Email Send or Resend
   const handleSendSingleEmail = async (student) => {
     if (!student.email || !student.email.includes('@')) {
       showToast(`Student ${student.name} (${student.rNo}) does not have a valid email address.`, 'error');
       return;
     }
 
+    const isResend = student.couponSentStatus === 'sent';
     setSendingId(student.id);
     try {
       const res = await fetch(`${backendUrl}/api/club-events/coupons/send-single`, {
@@ -236,20 +238,35 @@ const SendCoupons = () => {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast(`Coupon sent to ${student.email}!`);
+        showToast(
+          isResend
+            ? `Coupon pass resent to ${student.email} successfully!`
+            : `Coupon pass sent to ${student.email}!`,
+          'success'
+        );
+        const sentTime = data.sentAt || new Date().toISOString();
         // Update local status
         setCoupons((prev) =>
           prev.map((item) =>
             item.id === student.id
-              ? { ...item, couponSentStatus: 'sent', couponSentAt: data.sentAt || new Date().toISOString() }
+              ? { ...item, couponSentStatus: 'sent', couponSentAt: sentTime }
               : item
           )
         );
-        setStats((prev) => ({
-          ...prev,
-          sent: prev.sent + 1,
-          pending: Math.max(0, prev.pending - 1)
-        }));
+        if (previewStudent && previewStudent.id === student.id) {
+          setPreviewStudent((prev) => ({
+            ...prev,
+            couponSentStatus: 'sent',
+            couponSentAt: sentTime
+          }));
+        }
+        if (!isResend) {
+          setStats((prev) => ({
+            ...prev,
+            sent: prev.sent + 1,
+            pending: Math.max(0, prev.pending - 1)
+          }));
+        }
       } else {
         showToast(data.message || 'Failed to send email', 'error');
       }
@@ -553,12 +570,12 @@ const SendCoupons = () => {
             className="btn-bulk-send"
             onClick={handleOpenBulkModal}
             disabled={isLoading || coupons.length === 0}
-            title="Bulk send coupon emails to paid members"
+            title="Bulk send or resend coupon emails to paid members"
           >
-            <Mail size={18} />
+            {selectedIds.size > 0 ? <RotateCcw size={16} /> : <Mail size={18} />}
             <span>
               {selectedIds.size > 0
-                ? `Bulk Send Mail (${selectedIds.size})`
+                ? `Bulk Resend / Send (${selectedIds.size})`
                 : `Bulk Send Mail (${stats.pending || 0})`}
             </span>
           </button>
@@ -851,22 +868,35 @@ const SendCoupons = () => {
                         <div className="table-actions-cell" style={{ justifyContent: 'center' }}>
                           {/* View Option */}
                           <button
-                            className="action-icon-btn"
+                            className="action-icon-btn btn-view-pass"
                             onClick={() => setPreviewStudent(item)}
                             title="View official coupon pass"
                           >
                             <Eye size={16} />
                           </button>
 
-                          {/* Send Single Mail */}
-                          <button
-                            className="action-icon-btn btn-send-single"
-                            onClick={() => handleSendSingleEmail(item)}
-                            disabled={isSending || !item.email}
-                            title={isSent ? 'Resend coupon email' : 'Send coupon email now'}
-                          >
-                            <Send size={15} className={isSending ? 'spinning' : ''} />
-                          </button>
+                          {/* Send or Resend Single Mail */}
+                          {isSent ? (
+                            <button
+                              className="action-pill-btn btn-resend-action"
+                              onClick={() => handleSendSingleEmail(item)}
+                              disabled={isSending || !item.email}
+                              title={item.email ? `Resend coupon pass email to ${item.email}` : 'No email registered'}
+                            >
+                              <RotateCcw size={13} className={isSending ? 'spinning' : ''} />
+                              <span>{isSending ? 'Sending...' : 'Resend'}</span>
+                            </button>
+                          ) : (
+                            <button
+                              className="action-pill-btn btn-send-action"
+                              onClick={() => handleSendSingleEmail(item)}
+                              disabled={isSending || !item.email}
+                              title={item.email ? `Send coupon pass email to ${item.email}` : 'No email registered'}
+                            >
+                              <Send size={13} className={isSending ? 'spinning' : ''} />
+                              <span>{isSending ? 'Sending...' : 'Send'}</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1024,6 +1054,26 @@ const SendCoupons = () => {
               </div>
             </div>
 
+            {/* Dispatch Status Pill in Modal */}
+            {previewStudent.couponSentAt && (
+              <div className="modal-dispatch-info-pill">
+                <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
+                <span>
+                  Official pass email already dispatched on{' '}
+                  <strong>
+                    {new Date(previewStudent.couponSentAt).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </strong>
+                  . You can resend again anytime below.
+                </span>
+              </div>
+            )}
+
             {/* Modal Actions */}
             <div className="coupon-modal-actions">
               <button
@@ -1063,15 +1113,27 @@ const SendCoupons = () => {
                 <span>Download Pass (PDF)</span>
               </button>
 
-              <button
-                className="btn-bulk-send send-email-btn"
-                onClick={() => handleSendSingleEmail(previewStudent)}
-                disabled={sendingId === previewStudent.id || !previewStudent.email}
-                title={previewStudent.email ? `Email pass to ${previewStudent.email}` : 'No email address on record'}
-              >
-                <Mail size={15} />
-                <span>{sendingId === previewStudent.id ? 'Sending...' : 'Send to Email'}</span>
-              </button>
+              {previewStudent.couponSentStatus === 'sent' ? (
+                <button
+                  className="btn-bulk-send send-email-btn resend-email-btn"
+                  onClick={() => handleSendSingleEmail(previewStudent)}
+                  disabled={sendingId === previewStudent.id || !previewStudent.email}
+                  title={previewStudent.email ? `Resend email pass to ${previewStudent.email}` : 'No email address on record'}
+                >
+                  <RotateCcw size={15} className={sendingId === previewStudent.id ? 'spinning' : ''} />
+                  <span>{sendingId === previewStudent.id ? 'Resending...' : 'Resend to Email'}</span>
+                </button>
+              ) : (
+                <button
+                  className="btn-bulk-send send-email-btn"
+                  onClick={() => handleSendSingleEmail(previewStudent)}
+                  disabled={sendingId === previewStudent.id || !previewStudent.email}
+                  title={previewStudent.email ? `Email pass to ${previewStudent.email}` : 'No email address on record'}
+                >
+                  <Mail size={15} />
+                  <span>{sendingId === previewStudent.id ? 'Sending...' : 'Send to Email'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
