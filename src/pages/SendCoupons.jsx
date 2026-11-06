@@ -343,45 +343,68 @@ const SendCoupons = () => {
     setBulkModalOpen(true);
   };
 
-  // Execute Bulk Send
+  // Execute Bulk Send in Fast Streaming Batches
   const handleExecuteBulkSend = async () => {
     const targets = getBulkRecipients();
     if (targets.length === 0) return;
 
-    setBulkProgress((prev) => ({
-      ...prev,
+    setBulkProgress({
       inProgress: true,
       total: targets.length,
       current: 0,
       sent: 0,
       failed: 0,
       results: []
-    }));
+    });
+
+    const BATCH_SIZE = 12; // 12 emails per batch with 4 concurrent workers on server
+    let totalSent = 0;
+    let totalFailed = 0;
+    const accumulatedResults = [];
 
     try {
-      const res = await fetch(`${backendUrl}/api/club-events/coupons/bulk-send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: targets })
-      });
+      for (let i = 0; i < targets.length; i += BATCH_SIZE) {
+        const batch = targets.slice(i, i + BATCH_SIZE);
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setBulkProgress({
-          inProgress: false,
-          total: targets.length,
-          current: targets.length,
-          sent: data.summary?.sent || 0,
-          failed: data.summary?.failed || 0,
-          results: data.results || []
+        const res = await fetch(`${backendUrl}/api/club-events/coupons/bulk-send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: batch })
         });
-        showToast(data.message || 'Bulk dispatch completed!');
-        fetchCoupons();
-        setSelectedIds(new Set());
-      } else {
-        showToast(data.message || 'Bulk send failed', 'error');
-        setBulkProgress((prev) => ({ ...prev, inProgress: false }));
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          totalSent += (data.summary?.sent ?? 0);
+          totalFailed += (data.summary?.failed ?? 0);
+          if (Array.isArray(data.results)) {
+            accumulatedResults.push(...data.results);
+          }
+        } else {
+          totalFailed += batch.length;
+          batch.forEach((b) => {
+            accumulatedResults.push({
+              rNo: b.rNo,
+              name: b.name,
+              success: false,
+              error: data.message || 'Batch failed'
+            });
+          });
+        }
+
+        const isLastBatch = i + BATCH_SIZE >= targets.length;
+        setBulkProgress({
+          inProgress: !isLastBatch,
+          total: targets.length,
+          current: Math.min(i + BATCH_SIZE, targets.length),
+          sent: totalSent,
+          failed: totalFailed,
+          results: [...accumulatedResults]
+        });
       }
+
+      showToast(`Bulk email dispatch completed! Sent: ${totalSent}, Failed: ${totalFailed}`, totalFailed > 0 ? 'info' : 'success');
+      fetchCoupons();
+      setSelectedIds(new Set());
     } catch (err) {
       console.error('Error executing bulk send:', err);
       showToast('Network error during bulk dispatch', 'error');
