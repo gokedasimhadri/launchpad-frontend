@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock } from 'lucide-react';
+import { User, Lock, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
 import CelestialLogo from '../components/CelestialLogo';
@@ -107,7 +107,14 @@ const Login = () => {
             className="submit-btn login-btn"
             disabled={isLoading}
           >
-            {isLoading ? <span className="loading-spinner static-spinner"></span> : 'Sign In'}
+            {isLoading ? (
+              <span className="login-btn-content">
+                <Loader2 size={19} className="login-btn-spinner" />
+                <span>Signing in...</span>
+              </span>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Sparkles,
@@ -235,8 +235,13 @@ const ClubEventRegistrations = () => {
     fetchRegistrations();
   }, [filterEvent, filterStatus, filterBranch, filterRole]);
 
-  // Handle live search with debounce
+  // Handle live search with debounce (skips redundant initial mount fetch)
+  const isFirstSearchRender = useRef(true);
   useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false;
+      return;
+    }
     const handler = setTimeout(() => {
       fetchRegistrations();
     }, 350);

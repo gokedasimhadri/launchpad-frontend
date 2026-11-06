@@ -163,13 +163,23 @@ const SendCoupons = () => {
     }
   };
 
+  // Check SMTP Status once on mount
+  useEffect(() => {
+    fetchSmtpStatus();
+  }, []);
+
+  // Fetch coupons on event or status filter change
   useEffect(() => {
     fetchCoupons();
-    fetchSmtpStatus();
   }, [filterEvent, filterStatus]);
 
-  // Debounced search
+  // Debounced search (skips redundant initial mount fetch)
+  const isFirstSearchRender = useRef(true);
   useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       fetchCoupons();
     }, 350);
@@ -357,7 +367,7 @@ const SendCoupons = () => {
       results: []
     });
 
-    const BATCH_SIZE = 12; // 12 emails per batch with 4 concurrent workers on server
+    const BATCH_SIZE = 6; // 6 emails per batch for sub-second live progress updates
     let totalSent = 0;
     let totalFailed = 0;
     const accumulatedResults = [];
@@ -1194,8 +1204,8 @@ const SendCoupons = () => {
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                       <li>Personalized student greeting with roll number & branch</li>
                       <li>Official Coupon Pass ticket card embedded in email body</li>
-                      <li>Scannable QR code verification badge</li>
-                      <li>Attached standalone downloadable/printable coupon pass</li>
+                      <li>Scannable Barcode verification badge (Code 128)</li>
+                      <li>Attached downloadable/printable official PDF pass</li>
                     </ul>
                   </div>
 
@@ -1209,79 +1219,96 @@ const SendCoupons = () => {
                     </button>
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                    {bulkProgress.inProgress ? 'Dispatching Coupon Emails...' : 'Bulk Dispatch Completed!'}
-                  </div>
+              ) : (() => {
+                const processedCount = bulkProgress.sent + bulkProgress.failed;
+                const totalCount = bulkProgress.total || 1;
+                const percent = Math.min(100, Math.round((processedCount / totalCount) * 100));
 
-                  {/* Progress bar */}
-                  <div className="progress-bar-container">
-                    <div
-                      className="progress-bar-fill"
-                      style={{
-                        width: `${Math.round(((bulkProgress.sent + bulkProgress.failed) / (bulkProgress.total || 1)) * 100)}%`
-                      }}
-                    ></div>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                    <span>
-                      Processed: {bulkProgress.sent + bulkProgress.failed} / {bulkProgress.total}
-                    </span>
-                    <span>
-                      Success: <strong style={{ color: '#10b981' }}>{bulkProgress.sent}</strong> | Failed:{' '}
-                      <strong style={{ color: '#ef4444' }}>{bulkProgress.failed}</strong>
-                    </span>
-                  </div>
-
-                  {/* Results List */}
-                  {bulkProgress.results.length > 0 && (
-                    <div className="bulk-results-list">
-                      {bulkProgress.results.map((res, idx) => (
-                        <div key={idx} className="bulk-result-row">
-                          <div>
-                            <strong style={{ color: 'var(--text-main)' }}>{res.name}</strong> ({res.rNo})
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{res.email}</div>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            {res.success ? (
-                              <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.8rem' }}>
-                                &#10003; Sent
-                              </span>
-                            ) : (
-                              <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.8rem' }}>
-                                &#10007; {res.error || 'Failed'}
-                              </span>
-                            )}
-                            {res.previewUrl && (
-                              <div>
-                                <a
-                                  href={res.previewUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="preview-link-btn"
-                                >
-                                  <span>View Preview</span>
-                                  <ExternalLink size={12} />
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                return (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {bulkProgress.inProgress && (
+                          <RefreshCw size={16} className="spinning" style={{ color: '#2563eb' }} />
+                        )}
+                        <span>
+                          {bulkProgress.inProgress ? 'Dispatching Coupon Emails...' : 'Bulk Dispatch Completed!'}
+                        </span>
+                      </div>
+                      <div className="bulk-percent-badge">
+                        {percent}%
+                      </div>
                     </div>
-                  )}
 
-                  {!bulkProgress.inProgress && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-                      <button className="btn-primary-action" onClick={() => setBulkModalOpen(false)}>
-                        Done
-                      </button>
+                    {/* Progress bar */}
+                    <div className="progress-bar-container">
+                      <div
+                        className="progress-bar-fill"
+                        style={{
+                          width: `${percent}%`
+                        }}
+                      ></div>
                     </div>
-                  )}
-                </div>
-              )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                      <span>
+                        Processed: <strong style={{ color: 'var(--text-main)' }}>{processedCount} / {bulkProgress.total}</strong>{' '}
+                        <span style={{ color: '#2563eb', fontWeight: 700, marginLeft: '6px' }}>({percent}%)</span>
+                      </span>
+                      <span>
+                        Success: <strong style={{ color: '#10b981' }}>{bulkProgress.sent}</strong> | Failed:{' '}
+                        <strong style={{ color: '#ef4444' }}>{bulkProgress.failed}</strong>
+                      </span>
+                    </div>
+
+                    {/* Results List */}
+                    {bulkProgress.results.length > 0 && (
+                      <div className="bulk-results-list">
+                        {bulkProgress.results.map((res, idx) => (
+                          <div key={idx} className="bulk-result-row">
+                            <div>
+                              <strong style={{ color: 'var(--text-main)' }}>{res.name}</strong> ({res.rNo})
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{res.email}</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              {res.success ? (
+                                <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.8rem' }}>
+                                  &#10003; Sent
+                                </span>
+                              ) : (
+                                <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.8rem' }}>
+                                  &#10007; {res.error || 'Failed'}
+                                </span>
+                              )}
+                              {res.previewUrl && (
+                                <div>
+                                  <a
+                                    href={res.previewUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="preview-link-btn"
+                                  >
+                                    <span>View Preview</span>
+                                    <ExternalLink size={12} />
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {!bulkProgress.inProgress && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                        <button className="btn-primary-action" onClick={() => setBulkModalOpen(false)}>
+                          Done
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

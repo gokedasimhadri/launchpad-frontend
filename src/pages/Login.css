@@ -176,6 +176,40 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 14px rgba(13, 35, 59, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-btn:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.login-btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.login-btn-spinner {
+  animation: loginBtnSpin 0.9s linear infinite;
+  display: inline-block;
+  color: #ffffff;
+}
+
+@keyframes loginBtnSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-btn:hover:not(:disabled) {
@@ -183,12 +217,6 @@
   opacity: 1;
   transform: none;
   box-shadow: 0 4px 14px rgba(13, 35, 59, 0.25);
-}
-
-.static-spinner {
-  position: static;
-  transform: none;
-  border-top-color: white;
 }
 
 @media (max-width: 640px) {
