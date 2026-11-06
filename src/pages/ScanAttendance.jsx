@@ -18,9 +18,11 @@ import {
   VolumeX,
   UserCheck,
   Ticket,
-  FileText
+  FileText,
+  Barcode,
+  FileSpreadsheet
 } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import './ScanAttendance.css';
 
 const ScanAttendance = () => {
@@ -204,20 +206,73 @@ const ScanAttendance = () => {
     }
   };
 
+  // Automatic USB / Bluetooth Handheld Barcode Scanner listener
+  useEffect(() => {
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleKeyDown = (e) => {
+      // If user is actively typing in an input/textarea/select, don't intercept
+      const target = e.target;
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const currentTime = Date.now();
+      // Hardware barcode scanners type very rapidly (< 120ms between characters)
+      if (currentTime - lastKeyTime > 150) {
+        buffer = '';
+      }
+      lastKeyTime = currentTime;
+
+      if (e.key === 'Enter') {
+        if (buffer.length >= 4) {
+          e.preventDefault();
+          handleVerifyCode(buffer);
+          buffer = '';
+        }
+      } else if (e.key.length === 1) {
+        buffer += e.key;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedEvent, isVerifying]);
+
   // Toggle Camera
   const startCamera = async () => {
     setCameraError(null);
     try {
       if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode('attendance-qr-reader');
+        html5QrCodeRef.current = new Html5Qrcode('attendance-qr-reader', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.EAN_13
+          ],
+          verbose: false
+        });
       }
 
       await html5QrCodeRef.current.start(
         { facingMode: 'environment' },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
+          fps: 15,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            return {
+              width: Math.min(viewfinderWidth * 0.9, 360),
+              height: Math.min(viewfinderHeight * 0.55, 180)
+            };
+          },
+          aspectRatio: 1.3333,
         },
         (decodedText) => {
           // Prevent multiple triggers within short interval
@@ -226,7 +281,7 @@ const ScanAttendance = () => {
           }
         },
         () => {
-          // scan failure / frame without QR - ignore
+          // scan failure / frame without barcode - ignore
         }
       );
       setIsCameraActive(true);
@@ -321,17 +376,26 @@ const ScanAttendance = () => {
       return;
     }
 
-    // 2. If Image file: decode QR code with html5-qrcode
+    // 2. If Image file: decode barcode/QR code with html5-qrcode
     if (file.type.startsWith('image/')) {
       try {
-        const scanner = new Html5Qrcode('attendance-file-helper', false);
+        const scanner = new Html5Qrcode('attendance-file-helper', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.EAN_13
+          ],
+          verbose: false
+        });
         const result = await scanner.scanFile(file, true);
         if (result) {
           handleVerifyCode(result);
         }
       } catch (err) {
-        console.error('Image QR scan error:', err);
-        showToast('No QR code detected in the uploaded image. Please try another image.', 'error');
+        console.error('Image barcode scan error:', err);
+        showToast('No barcode or QR code detected in the uploaded image. Please try another image.', 'error');
       }
     }
   };
@@ -390,48 +454,90 @@ const ScanAttendance = () => {
     }
   };
 
-  // Export Attendance CSV
-  const handleExportAttendanceCSV = () => {
-    if (couponsList.length === 0) {
-      showToast('No records to export', 'error');
+  // Download Attendance Excel report based on current selected status & event filter
+  const handleDownloadExcel = () => {
+    // Export based on filtered roster (respecting selected status: all / present / absent)
+    const exportData = filteredRoster;
+
+    if (exportData.length === 0) {
+      const statusWord = statusFilter === 'all' ? 'All' : statusFilter === 'present' ? 'Present' : 'Absent';
+      showToast(`No student attendance records found matching status "${statusWord}".`, 'error');
       return;
     }
 
     const headers = [
+      'S.No',
       'Roll Number',
-      'Name',
-      'Branch',
+      'Participant Name',
+      'Branch / Dept',
       'Event Name',
       'Team Name',
-      'Role',
+      'Registration Role',
       'Coupon Code',
       'Attendance Status',
-      'Attended Timestamp',
-      'Marked By'
+      'Check-in Time',
+      'Check-in Date',
+      'Marked By',
+      'Payment Status'
     ];
 
-    const escapeCSV = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+    const escapeCSV = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
 
-    const rows = couponsList.map((c) => [
-      escapeCSV(c.rNo),
-      escapeCSV(c.name),
-      escapeCSV(c.branch),
-      escapeCSV(c.eventName),
-      escapeCSV(c.teamName),
-      escapeCSV(c.isLeader ? 'Leader' : 'Member'),
-      escapeCSV(c.couponCode),
-      escapeCSV((c.attendanceStatus || 'pending').toUpperCase()),
-      escapeCSV(c.attendedAt ? new Date(c.attendedAt).toLocaleString('en-IN') : 'N/A'),
-      escapeCSV(c.attendanceMarkedBy || 'N/A')
-    ]);
+    const rows = exportData.map((c, idx) => {
+      const isPresent = c.attendanceStatus === 'present';
+      const dObj = c.attendedAt ? new Date(c.attendedAt) : null;
+      const checkInTime = dObj
+        ? dObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+        : 'Not Scanned';
+      const checkInDate = dObj
+        ? dObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        : 'N/A';
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      let roleLabel = 'Individual Participant';
+      if (c.teamName) {
+        roleLabel = c.isLeader ? `Team Leader (${c.teamName})` : `Team Member (${c.teamName})`;
+      }
+
+      return [
+        idx + 1,
+        escapeCSV(c.rNo),
+        escapeCSV(c.name),
+        escapeCSV(c.branch || 'General'),
+        escapeCSV(c.eventName),
+        escapeCSV(c.teamName || 'Individual'),
+        escapeCSV(roleLabel),
+        escapeCSV(c.couponCode),
+        escapeCSV(isPresent ? 'PRESENT' : 'ABSENT'),
+        escapeCSV(checkInTime),
+        escapeCSV(checkInDate),
+        escapeCSV(c.attendanceMarkedBy || (isPresent ? 'Gate Scanner' : 'N/A')),
+        escapeCSV('PAID')
+      ];
+    });
+
+    // UTF-8 Byte Order Mark (BOM) \uFEFF ensures Excel on Windows opens CSV with zero encoding issues
+    const BOM = '\uFEFF';
+    const csvContent = BOM + [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = encodeURI(csvContent);
-    link.download = `Attendance_Report_${selectedEvent}_${Date.now()}.csv`;
+
+    const matchedEvt = eventsList.find((e) => e.eventId === selectedEvent);
+    const eventNameSlug = selectedEvent === 'all' ? 'All_Events' : (matchedEvt?.eventName || 'Event').replace(/[^a-zA-Z0-9]/g, '_');
+    const statusLabel = statusFilter === 'all' ? 'All' : statusFilter === 'present' ? 'Present' : 'Absent';
+    const dateStamp = new Date().toISOString().slice(0, 10);
+
+    link.href = url;
+    link.download = `Attendance_${eventNameSlug}_${statusLabel}_${dateStamp}.csv`;
+    document.body.appendChild(link);
     link.click();
-    showToast('Exported attendance report successfully!');
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Downloaded Excel sheet for ${statusLabel} students (${exportData.length})!`);
   };
+
+  const handleExportAttendanceCSV = handleDownloadExcel;
 
   // Stats calculation
   const totalStudents = couponsList.length;
@@ -454,7 +560,7 @@ const ScanAttendance = () => {
 
     // Status filter
     if (statusFilter === 'present') return item.attendanceStatus === 'present';
-    if (statusFilter === 'pending') return item.attendanceStatus !== 'present';
+    if (statusFilter === 'absent' || statusFilter === 'pending') return item.attendanceStatus !== 'present';
     return true;
   });
 
@@ -475,11 +581,11 @@ const ScanAttendance = () => {
       <div className="scan-header-container">
         <div className="scan-title-group">
           <h1>
-            <QrCode size={28} style={{ color: 'var(--primary-color)' }} />
+            <Barcode size={30} style={{ color: 'var(--primary-color)' }} />
             Event Pass Attendance Scanner
           </h1>
           <p>
-            Scan pass QR codes (from printed or mobile PDF passes), drop downloaded PDF passes, or enter roll numbers to mark attendance.
+            Scan pass barcodes (from printed or mobile PDF passes), use handheld USB barcode scanners, or drop passes to mark attendance.
           </p>
         </div>
 
@@ -615,7 +721,7 @@ const ScanAttendance = () => {
                   <span>{isCameraActive ? 'Pause Camera' : 'Start Camera'}</span>
                 </button>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Point camera at the QR code on the PDF pass or phone
+                  Point camera at the barcode on the pass or phone screen (Handheld USB scanners supported automatically)
                 </span>
               </div>
             </div>
@@ -799,7 +905,7 @@ const ScanAttendance = () => {
             >
               <option value="all">All Statuses ({totalStudents})</option>
               <option value="present">Present ({presentCount})</option>
-              <option value="pending">Pending ({pendingCount})</option>
+              <option value="absent">Absent ({pendingCount})</option>
             </select>
 
             {/* Search */}
@@ -811,6 +917,16 @@ const ScanAttendance = () => {
               className="search-field-input"
               style={{ minWidth: '180px', padding: '0.55rem 1rem' }}
             />
+
+            {/* Download Excel Button right at this place */}
+            <button
+              onClick={handleDownloadExcel}
+              className="btn-download-excel"
+              title={`Download Excel attendance report for ${statusFilter === 'all' ? 'All' : statusFilter === 'present' ? 'Present' : 'Absent'} students`}
+            >
+              <FileSpreadsheet size={16} />
+              <span>Download Excel</span>
+            </button>
           </div>
         </div>
 

@@ -828,38 +828,91 @@
   clip-path: polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%);
 }
 
-.pass-coupon-strip {
+.pass-barcode-strip {
   background: #eff6ff;
   border: 1.5px dashed #3b82f6;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.barcode-strip-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.pass-code-box .code-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #2563eb;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
-}
-
-.code-val-row {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.pass-code-box .code-val {
+.barcode-badge-wrap {
+  display: inline-flex;
+  align-items: center;
+  color: #2563eb;
+}
+
+.barcode-tag-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.barcode-code-display {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.barcode-code-val {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 1.25rem;
+  font-size: 1.18rem;
   font-weight: 900;
   color: #1d4ed8;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
+}
+
+.barcode-visual-box {
+  background: #ffffff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.barcode-visual-box svg {
+  width: 100%;
+  height: 64px;
+  display: block;
+}
+
+.barcode-strip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.66rem;
+  color: #64748b;
+  padding-top: 2px;
+}
+
+.barcode-instruction {
+  font-weight: 600;
+  color: #475569;
+}
+
+.barcode-standard-badge {
+  font-family: monospace;
+  font-size: 0.63rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .code-copy-mini-btn {
@@ -878,33 +931,6 @@
 .code-copy-mini-btn:hover {
   background: #2563eb;
   color: #ffffff;
-}
-
-.pass-code-box .code-note {
-  font-size: 0.68rem;
-  color: #64748b;
-  margin-top: 3px;
-}
-
-.pass-qr-box {
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.pass-qr-box svg {
-  background: white;
-  padding: 4px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  display: block;
-}
-
-.qr-caption {
-  font-size: 0.58rem;
-  font-weight: 800;
-  color: #64748b;
-  margin-top: 3px;
-  letter-spacing: 0.4px;
 }
 
 .pass-footer-strip {

@@ -24,8 +24,10 @@ import {
   ChevronRight,
   ShieldCheck,
   Info,
-  QrCode
+  QrCode,
+  Barcode
 } from 'lucide-react';
+import BarcodeSVG from '../utils/barcodeGenerator';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import './SendCoupons.css';
@@ -976,12 +978,15 @@ const SendCoupons = () => {
                     <span className="stub-notch notch-right"></span>
                   </div>
 
-                  {/* Coupon Strip */}
-                  <div className="pass-coupon-strip">
-                    <div className="pass-code-box">
-                      <div className="code-label">Unique Verification Coupon</div>
-                      <div className="code-val-row">
-                        <span className="code-val">{previewStudent.couponCode}</span>
+                  {/* Official Barcode Strip */}
+                  <div className="pass-barcode-strip">
+                    <div className="barcode-strip-header">
+                      <div className="barcode-badge-wrap">
+                        <Barcode size={13} style={{ marginRight: '4px' }} />
+                        <span className="barcode-tag-badge">OFFICIAL VERIFICATION BARCODE</span>
+                      </div>
+                      <div className="barcode-code-display">
+                        <span className="barcode-code-val">{previewStudent.couponCode}</span>
                         <button
                           className="code-copy-mini-btn"
                           onClick={() => copyToClipboard(previewStudent.couponCode, 'card-copy')}
@@ -991,20 +996,22 @@ const SendCoupons = () => {
                           {copiedId === 'card-copy' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
                         </button>
                       </div>
-                      <div className="code-note">
-                        Present this pass code or scan QR for event attendance.
-                      </div>
                     </div>
 
-                    {/* QR Code */}
-                    <div className="pass-qr-box">
-                      <QRCodeSVG
+                    {/* Laser / Scanner Optimized Barcode */}
+                    <div className="barcode-visual-box">
+                      <BarcodeSVG
                         value={previewStudent.couponCode}
-                        size={84}
-                        level="H"
-                        includeMargin={false}
+                        height={64}
+                        showText={false}
                       />
-                      <div className="qr-caption">SCAN PASS</div>
+                    </div>
+
+                    <div className="barcode-strip-footer">
+                      <span className="barcode-instruction">
+                        ⚡ Scan barcode at venue entrance for instant gate verification
+                      </span>
+                      <span className="barcode-standard-badge">CODE-128</span>
                     </div>
                   </div>
                 </div>

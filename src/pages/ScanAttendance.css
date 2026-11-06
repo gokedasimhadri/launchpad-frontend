@@ -588,3 +588,36 @@
   border-color: #2563eb;
   color: #2563eb;
 }
+
+/* Download Excel Action Button */
+.btn-download-excel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  background: linear-gradient(135deg, #107c41 0%, #15803d 100%);
+  color: #ffffff;
+  border: 1px solid #166534;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(16, 124, 65, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-download-excel:hover {
+  background: linear-gradient(135deg, #0b6a37 0%, #166534 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 124, 65, 0.35);
+}
+
+.btn-download-excel:active {
+  transform: translateY(0);
+}
+
+.btn-download-excel svg {
+  color: #ffffff;
+  flex-shrink: 0;
+}
