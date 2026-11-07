@@ -20,7 +20,8 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Download
+  Download,
+  Clock
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -401,6 +402,11 @@ const ClubEventPaymentPage = () => {
   }
 
   const eventFee = Number(event.amount) || 0;
+  const isRoboticsEvent = Boolean(
+    (slug && slug.toLowerCase().includes('robotics-3-0')) ||
+    (event?.slug_link && event.slug_link.toLowerCase().includes('robotics-3-0')) ||
+    (event?.name && event.name.toLowerCase().includes('robotics 3.0'))
+  );
 
   return (
     <div className="club-payment-wrapper">
@@ -577,6 +583,12 @@ const ClubEventPaymentPage = () => {
             <span className="checkout-badge">Step 2 of 2: Checkout</span>
             <h2>Complete Your Payment</h2>
             <p className="event-name-tag">{event.name}</p>
+            {isRoboticsEvent && (
+              <div className="event-deadline-badge" style={{ marginTop: '0.6rem' }}>
+                <Clock size={15} />
+                <span>Registration will be closed nov 20</span>
+              </div>
+            )}
           </div>
 
           {/* IMPORTANT STUDENT WARNING BANNER */}

@@ -14,7 +14,8 @@ import {
   Plus,
   Check,
   X,
-  Download
+  Download,
+  Clock
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -706,6 +707,11 @@ const ClubEventPublicRegistration = () => {
   const expectedPersons = event.personsCount || event.maxTeamSize || event.minTeamSize || 2;
   const minTeamSize = Math.max(1, event.minTeamSize || expectedPersons);
   const maxTeamSize = Math.max(minTeamSize, event.maxTeamSize || expectedPersons);
+  const isRoboticsEvent = Boolean(
+    (slug && slug.toLowerCase().includes('robotics-3-0')) ||
+    (event?.slug_link && event.slug_link.toLowerCase().includes('robotics-3-0')) ||
+    (event?.name && event.name.toLowerCase().includes('robotics 3.0'))
+  );
 
   return (
     <div className="club-event-public-wrapper">
@@ -862,6 +868,12 @@ const ClubEventPublicRegistration = () => {
             <p style={{ fontWeight: '600', color: 'var(--primary-color)', marginTop: '0.35rem', fontSize: '1.05rem', letterSpacing: '0.3px' }}>
               {event.name}
             </p>
+            {isRoboticsEvent && (
+              <div className="event-deadline-badge">
+                <Clock size={15} />
+                <span>Registration Closes on November 20!</span>
+              </div>
+            )}
           </div>
 
           {isClosed && (
